@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>マイページ - ピアノ練習伴走 Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen">
+
+    <!-- ヘッダー -->
+    <header class="bg-indigo-600 text-white p-4 shadow-md flex justify-between items-center">
+        <h1 class="font-bold text-lg">ピアノ練習伴走 Lab マイページ</h1>
+        <button id="logoutBtn" onclick="handleLogout()" class="hidden text-xs bg-indigo-700 hover:bg-indigo-800 px-3 py-1.5 rounded-lg border border-indigo-400">ログアウト</button>
+    </header>
+
+    <main class="max-w-lg mx-auto p-4 mt-6">
+
+        <!-- 1. ログイン / 会員登録フォーム -->
+        <div id="authSection" class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <h2 id="authTitle" class="text-xl font-bold mb-4 text-center">ログイン</h2>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">メールアドレス</label>
+                    <input type="email" id="email" placeholder="example@email.com" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
+                    <input type="password" id="password" placeholder="••••••••" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <button onclick="handleAuth()" id="submitAuthBtn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition">
+                    ログインする
+                </button>
+            </div>
+
+            <div class="mt-4 text-center">
+                <button onclick="toggleAuthMode()" id="toggleAuthBtn" class="text-xs text-indigo-600 font-semibold hover:underline">
+                    新規会員登録はこちら
+                </button>
+            </div>
+        </div>
+
+        <!-- 2. マイページ（ログイン後画面） -->
+        <div id="dashboardSection" class="hidden space-y-4">
+            
+            <!-- ウェルカムカード -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200">
+                <p class="text-xs text-slate-500">ログイン中</p>
+                <p id="userEmail" class="font-bold text-slate-800 mt-0.5 text-sm"></p>
+            </div>
+
+            <!-- 本日の練習・自習室参加用カード -->
+            <div class="bg-gradient-to-br from-indigo-500 to-purple-600 text-white p-6 rounded-2xl shadow-lg">
+                <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-semibold">アプリ・ログイン不要</span>
+                <h3 class="text-xl font-bold mt-2">練習ルームに入る</h3>
+                <p class="text-xs opacity-90 mt-1">タップするだけでそのままブラウザ上でZoom接続が始まります。</p>
+                
+                <button onclick="joinZoomRoom()" class="mt-5 w-full bg-white text-indigo-700 font-extrabold py-3.5 rounded-xl shadow hover:bg-slate-100 transition text-center block">
+                    📹 ルームを起動して接続する
+                </button>
+            </div>
+
+            <!-- 予定・ステータス -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-200 space-y-3">
+                <h4 class="font-bold text-sm text-slate-700 border-b pb-2">次回予約・稼働予定</h4>
+                <div class="flex justify-between items-center text-xs">
+                    <span class="text-slate-500">本日の伴走対応</span>
+                    <span class="font-semibold text-emerald-600">● 受付中 / 待機中</span>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <script>
+        // ★ご自身のSupabase情報に書き換えてください
+        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let isSignUp = false;
+
+        // モード切り替え（ログイン / 会員登録）
+        function toggleAuthMode() {
+            isSignUp = !isSignUp;
+            document.getElementById('authTitle').innerText = isSignUp ? '新規会員登録' : 'ログイン';
+            document.getElementById('submitAuthBtn').innerText = isSignUp ? '登録する' : 'ログインする';
+            document.getElementById('toggleAuthBtn').innerText = isSignUp ? '既にアカウントをお持ちの方はこちら' : '新規会員登録はこちら';
+        }
+
+        // ログイン・登録処理
+        async function handleAuth() {
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                alert('メールアドレスとパスワードを入力してください');
+                return;
+            }
+
+            let result;
+            if (isSignUp) {
+                result = await supabase.auth.signUp({ email, password });
+            } else {
+                result = await supabase.auth.signInWithPassword({ email, password });
+            }
+
+            if (result.error) {
+                alert('エラー: ' + result.error.message);
+            } else {
+                checkUser();
+            }
+        }
+
+        // ログアウト処理
+        async function handleLogout() {
+            await supabase.auth.signOut();
+            checkUser();
+        }
+
+        // ログイン状態の確認・表示切り替え
+        async function checkUser() {
+            const { data: { user } } = await supabase.auth.getUser();
+            if (user) {
+                document.getElementById('authSection').classList.add('hidden');
+                document.getElementById('dashboardSection').classList.remove('hidden');
+                document.getElementById('logoutBtn').classList.remove('hidden');
+                document.getElementById('userEmail').innerText = user.email;
+            } else {
+                document.getElementById('authSection').classList.remove('hidden');
+                document.getElementById('dashboardSection').classList.add('hidden');
+                document.getElementById('logoutBtn').classList.add('hidden');
+            }
+        }
+
+        // Zoomルーム接続（後ほどZoom Meeting SDKの処理をここに結合します）
+        function joinZoomRoom() {
+            alert('ログイン認証が確認されました。Zoomルームをブラウザ内で起動します。');
+        }
+
+        // ページ読み込み時にログイン状態をチェック
+        checkUser();
+    </script>
+</body>
+</html>
