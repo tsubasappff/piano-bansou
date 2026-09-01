@@ -3,83 +3,81 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>現役音大生がやさしく見守る オンラインピアノ練習伴走</title>
+    <title>ピアノ練習伴走 Lab - オンラインピアノ練習サポート</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans">
 
-    <!-- ヘッダー -->
-    <header class="bg-white shadow-sm sticky top-0 z-50">
-        <div class="max-w-4xl mx-auto px-4 py-4 flex justify-between items-center">
-            <h1 class="font-bold text-xl text-indigo-600">ピアノ練習伴走 Lab</h1>
-            <a href="#reserve" class="bg-indigo-600 text-white px-4 py-2 rounded-full text-sm font-semibold hover:bg-indigo-700 transition">無料体験予約</a>
-        </div>
-    </header>
-
-    <!-- メインビジュアル -->
-    <section class="bg-gradient-to-b from-indigo-50 to-slate-50 py-16 px-4 text-center">
-        <div class="max-w-3xl mx-auto">
-            <span class="bg-indigo-100 text-indigo-800 text-xs font-semibold px-3 py-1 rounded-full uppercase tracking-wide">保護者様の負担を劇的に減らす</span>
-            <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 mt-4 leading-tight">もう「練習しなさい！」と<br>怒らなくて大丈夫。</h2>
-            <p class="mt-4 text-base text-slate-600 leading-relaxed">
-                夕飯の準備中、お子様がピアノに向かう20分間の習慣化。<br>
-                現役音大生のお兄さん・お姉さんが、やさしく横で見守り励まします。
-            </p>
-            <div class="mt-8">
-                <a href="#reserve" class="inline-block bg-indigo-600 text-white text-lg font-bold px-8 py-4 rounded-full shadow-lg hover:bg-indigo-700 transform hover:-translate-y-0.5 transition">
-                    まずはお試し！20分無料体験に申し込む
+    <!-- 1. ナビゲーションヘッダー（右上にログイン・新規登録） -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-200">
+        <div class="max-w-5xl mx-auto px-4 py-3 flex justify-between items-center">
+            <!-- ロゴ -->
+            <a href="index.html" class="font-bold text-lg text-indigo-600 flex items-center gap-2">
+                🎹 <span>ピアノ練習伴走 Lab</span>
+            </a>
+            
+            <!-- 右上ボタンエリア -->
+            <div class="flex items-center gap-2">
+                <a href="mypage.html" class="text-xs font-semibold text-slate-600 hover:text-indigo-600 px-3 py-2 rounded-lg border border-slate-200 hover:bg-slate-50 transition">
+                    ログイン
+                </a>
+                <a href="mypage.html?mode=signup" class="text-xs font-bold bg-indigo-600 text-white px-3.5 py-2 rounded-lg shadow hover:bg-indigo-700 transition">
+                    無料体験
                 </a>
             </div>
         </div>
-    </section>
+    </header>
 
-    <!-- 悩み共感 -->
-    <section class="py-12 px-4 max-w-3xl mx-auto">
-        <h3 class="text-xl font-bold text-center mb-6">こんなお悩みありませんか？</h3>
-        <div class="space-y-4">
-            <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-start gap-3">
-                <span class="text-indigo-600 font-bold">✓</span>
-                <p class="text-sm text-slate-700">家で練習させようとすると、子供とケンカになってしまう</p>
-            </div>
-            <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-start gap-3">
-                <span class="text-indigo-600 font-bold">✓</span>
-                <p class="text-sm text-slate-700">忙しい夕方の時間帯（17〜19時）にピアノに付き添う余裕がない</p>
-            </div>
-            <div class="p-4 bg-white rounded-xl shadow-sm border border-slate-100 flex items-start gap-3">
-                <span class="text-indigo-600 font-bold">✓</span>
-                <p class="text-sm text-slate-700">楽譜が読めないので、子供に正しく教えてあげられない</p>
-            </div>
+    <!-- 2. メインヒーローエリア -->
+    <section class="max-w-4xl mx-auto px-4 py-12 text-center">
+        <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1.5 rounded-full">アプリ不要・スマホ1台でOK</span>
+        <h1 class="text-2xl sm:text-4xl font-extrabold text-slate-900 mt-4 leading-snug">
+            毎日のピアノ練習、<br class="sm:hidden"><span class="text-indigo-600">「ひとりじゃない」</span>から続く。
+        </h1>
+        <p class="text-xs sm:text-sm text-slate-600 mt-3 max-w-lg mx-auto leading-relaxed">
+            自宅での練習をオンラインで見守り・サポート。1台のスマホからいつでも練習ルームに繋がります。
+        </p>
+
+        <div class="mt-8 flex flex-col sm:flex-row justify-center gap-3">
+            <a href="mypage.html?mode=signup" class="bg-indigo-600 text-white font-bold py-3.5 px-8 rounded-xl shadow-lg hover:bg-indigo-700 transition text-sm">
+                今すぐ無料体験を試してみる ➔
+            </a>
         </div>
     </section>
 
-    <!-- 料金プラン（1対1フェーズ） -->
-    <section id="reserve" class="py-12 px-4 bg-white border-t border-slate-100">
-        <div class="max-w-3xl mx-auto text-center">
-            <h3 class="text-2xl font-bold mb-2">スタート記念プラン</h3>
-            <p class="text-sm text-slate-500 mb-8">まずはリスクなしで試せるマンツーマン伴走から！</p>
+    <!-- 3. 無料体験の流れ -->
+    <section class="bg-white py-12 border-y border-slate-200">
+        <div class="max-w-4xl mx-auto px-4">
+            <h2 class="text-xl font-bold text-center mb-8">簡単 3 ステップ！無料体験の流れ</h2>
             
-            <div class="bg-indigo-50 border-2 border-indigo-200 rounded-2xl p-6 shadow-sm max-w-sm mx-auto">
-                <span class="bg-indigo-600 text-white text-xs px-3 py-1 rounded-full font-bold">初回限定</span>
-                <h4 class="text-xl font-bold mt-2">1対1 マンツーマン伴走 (20分)</h4>
-                <div class="my-4">
-                    <span class="text-3xl font-extrabold text-indigo-600">0 円</span>
-                    <span class="text-xs text-slate-500 block mt-1">（通常 1回 1,200円）</span>
+            <div class="grid sm:grid-cols-3 gap-6">
+                <!-- STEP 1 -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                    <span class="text-xs font-bold bg-indigo-600 text-white px-2.5 py-1 rounded-full">STEP 1</span>
+                    <h3 class="font-bold text-sm mt-3">新規登録（1分）</h3>
+                    <p class="text-xs text-slate-500 mt-2">右上の「無料体験」ボタンからメールアドレスを登録するだけ。</p>
                 </div>
-                <ul class="text-left text-xs text-slate-600 space-y-2 mb-6">
-                    <li>・Zoomログイン不要！タップ1つで受講可能</li>
-                    <li>・楽譜が読めなくても音大生が丁寧にサポート</li>
-                    <li>・体験後に強引な勧誘は一切ありません</li>
-                </ul>
-                <button onclick="alert('LINE公式アカウントまたはTimeRexの予約枠をここに接続します！')" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-xl hover:bg-indigo-700 transition">
-                    日程を選んで予約する
-                </button>
+
+                <!-- STEP 2 -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                    <span class="text-xs font-bold bg-indigo-600 text-white px-2.5 py-1 rounded-full">STEP 2</span>
+                    <h3 class="font-bold text-sm mt-3">マイページに入る</h3>
+                    <p class="text-xs text-slate-500 mt-2">専用マイページからワンタップで練習ルームを起動できます。</p>
+                </div>
+
+                <!-- STEP 3 -->
+                <div class="bg-slate-50 p-5 rounded-2xl border border-slate-100 text-center">
+                    <span class="text-xs font-bold bg-indigo-600 text-white px-2.5 py-1 rounded-full">STEP 3</span>
+                    <h3 class="font-bold text-sm mt-3">伴走体験スタート</h3>
+                    <p class="text-xs text-slate-500 mt-2">画面越しに見守りを受けながら楽しく練習を進めましょう！</p>
+                </div>
             </div>
         </div>
     </section>
 
-    <!-- フッター -->
-    <footer class="bg-slate-900 text-slate-400 py-6 text-center text-xs">
-        <p>&copy; ピアノ練習伴走 Lab All Rights Reserved.</p>
+    <!-- 4. フッターエリア -->
+    <footer class="bg-slate-900 text-white py-8 text-center text-xs opacity-80">
+        <p>© ピアノ練習伴走 Lab All Rights Reserved.</p>
     </footer>
 
 </body>
