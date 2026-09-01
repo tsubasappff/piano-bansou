@@ -76,73 +76,92 @@
     </main>
 
     <script>
-        // ★ご自身のSupabase情報に書き換えてください
-        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let isSignUpMode = false;
 
-        let isSignUp = false;
+// 画面読み込み時にURLのパラメータ（?mode=signup）をチェック
+window.addEventListener('DOMContentLoaded', () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const mode = urlParams.get('mode');
 
-        // モード切り替え（ログイン / 会員登録）
-        function toggleAuthMode() {
-            isSignUp = !isSignUp;
-            document.getElementById('authTitle').innerText = isSignUp ? '新規会員登録' : 'ログイン';
-            document.getElementById('submitAuthBtn').innerText = isSignUp ? '登録する' : 'ログインする';
-            document.getElementById('toggleAuthBtn').innerText = isSignUp ? '既にアカウントをお持ちの方はこちら' : '新規会員登録はこちら';
+    if (mode === 'signup') {
+        // 無料体験ボタンから来た場合は「新規会員登録フォーム」を直接開く
+        showAuthForm(true);
+    } else if (mode === 'login') {
+        // ログインボタンから来た場合は「ログインフォーム」を直接開く
+        showAuthForm(false);
+    }
+});
+
+// フォームの表示切り替え
+function showAuthForm(isSignUp) {
+    isSignUpMode = isSignUp;
+    document.getElementById('choiceMode').classList.add('hidden');
+    document.getElementById('formMode').classList.remove('hidden');
+    
+    document.getElementById('authTitle').innerText = isSignUp ? '新規会員登録（無料体験）' : 'ログイン';
+    document.getElementById('submitAuthBtn').innerText = isSignUp ? '登録して体験を始める' : 'ログインする';
+}
+
+// 最初の選択画面に戻る
+function hideAuthForm() {
+    document.getElementById('choiceMode').classList.remove('hidden');
+    document.getElementById('formMode').classList.add('hidden');
+    document.getElementById('authTitle').innerText = 'ピアノ練習伴走 Lab';
+}
+
+// ログイン・登録実行
+async function handleAuth() {
+    const email = document.getElementById('email').value;
+    const password = document.getElementById('password').value;
+
+    if (!email || !password) {
+        alert('メールアドレスとパスワードを入力してください');
+        return;
+    }
+
+    try {
+        let response;
+        if (isSignUpMode) {
+            response = await supabase.auth.signUp({ email, password });
+        } else {
+            response = await supabase.auth.signInWithPassword({ email, password });
         }
 
-        // ログイン・登録処理
-        async function handleAuth() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-
-            if (!email || !password) {
-                alert('メールアドレスとパスワードを入力してください');
-                return;
-            }
-
-            let result;
-            if (isSignUp) {
-                result = await supabase.auth.signUp({ email, password });
-            } else {
-                result = await supabase.auth.signInWithPassword({ email, password });
-            }
-
-            if (result.error) {
-                alert('エラー: ' + result.error.message);
-            } else {
-                checkUser();
-            }
-        }
-
-        // ログアウト処理
-        async function handleLogout() {
-            await supabase.auth.signOut();
+        if (response.error) {
+            alert('エラー: ' + response.error.message);
+        } else {
+            alert(isSignUpMode ? '登録が完了しました！' : 'ログインしました！');
             checkUser();
         }
+    } catch (err) {
+        alert('通信エラーが発生しました: ' + err.message);
+    }
+}
 
-        // ログイン状態の確認・表示切り替え
-        async function checkUser() {
-            const { data: { user } } = await supabase.auth.getUser();
-            if (user) {
-                document.getElementById('authSection').classList.add('hidden');
-                document.getElementById('dashboardSection').classList.remove('hidden');
-                document.getElementById('logoutBtn').classList.remove('hidden');
-                document.getElementById('userEmail').innerText = user.email;
-            } else {
-                document.getElementById('authSection').classList.remove('hidden');
-                document.getElementById('dashboardSection').classList.add('hidden');
-                document.getElementById('logoutBtn').classList.add('hidden');
-            }
-        }
+// ログイン状態の確認・表示切り替え
+async function checkUser() {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+        document.getElementById('authSection').classList.add('hidden');
+        document.getElementById('dashboardSection').classList.remove('hidden');
+        document.getElementById('logoutBtn').classList.remove('hidden');
+        document.getElementById('userEmail').innerText = user.email;
+    } else {
+        document.getElementById('authSection').classList.remove('hidden');
+        document.getElementById('dashboardSection').classList.add('hidden');
+        document.getElementById('logoutBtn').classList.add('hidden');
+    }
+}
 
-        // Zoomルーム接続（後ほどZoom Meeting SDKの処理をここに結合します）
-        function joinZoomRoom() {
-            alert('ログイン認証が確認されました。Zoomルームをブラウザ内で起動します。');
-        }
+// ログアウト処理
+async function handleLogout() {
+    await supabase.auth.signOut();
+    checkUser();
+}
 
-        // ページ読み込み時にログイン状態をチェック
-        checkUser();
+// 起動時にログイン確認
+checkUser();
+
     </script>
 </body>
 </html>
