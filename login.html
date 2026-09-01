@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ログイン - ピアノ練習伴走 Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+
+    <!-- ヘッダー -->
+    <header class="bg-white border-b border-slate-200 py-3 px-4">
+        <div class="max-w-md mx-auto flex justify-between items-center">
+            <a href="index.html" class="font-bold text-sm text-indigo-600">🎹 ピアノ練習伴走 Lab</a>
+            <a href="signup.html" class="text-xs text-indigo-600 font-bold">新規登録はこちら</a>
+        </div>
+    </header>
+
+    <!-- メインコンテンツ -->
+    <main class="max-w-md mx-auto w-full px-4 py-8">
+        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+            <div class="text-center mb-6">
+                <h1 class="text-xl font-extrabold text-slate-900">おかえりなさい！</h1>
+                <p class="text-xs text-slate-500 mt-1">登録済みの情報でログインしてください</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">メールアドレス</label>
+                    <input type="email" id="email" autofocus required placeholder="example@email.com" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">パスワード</label>
+                    <input type="password" id="password" required placeholder="••••••••" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                </div>
+                
+                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow hover:bg-indigo-700 transition text-sm">
+                    ログインしてマイページへ ➔
+                </button>
+            </form>
+        </div>
+    </main>
+
+    <footer class="py-4 text-center text-[10px] text-slate-400">
+        © ピアノ練習伴走 Lab
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://flzguqgdltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'YOUR_SUPABASE_ANON_KEY'; // ※ご自身のanon keyに置き換えてください
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            const btn = document.getElementById('submitBtn');
+            btn.disabled = true;
+            btn.innerText = 'ログイン中...';
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+            if (error) {
+                alert('ログインエラー: ' + error.message);
+                btn.disabled = false;
+                btn.innerText = 'ログインしてマイページへ ➔';
+            } else {
+                window.location.href = 'mypage.html';
+            }
+        }
+    </script>
+</body>
+</html>
