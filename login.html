@@ -16,66 +16,60 @@
             background-color: #fcfbf9;
             color: #4a423d;
         }
-        .french-title {
+        .serif-title {
             font-family: 'Marcellus', serif;
         }
     </style>
 </head>
 <body class="min-h-screen flex items-center justify-center p-4 bg-gradient-to-b from-amber-50/60 via-stone-50 to-amber-100/30">
 
-    <div class="max-w-md w-full bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-stone-200/80 shadow-xl shadow-stone-200/50 space-y-6 relative">
+    <div class="max-w-md w-full bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-stone-200/80 shadow-xl shadow-stone-200/50 space-y-6">
         
-        <!-- トップページへ戻るボタン -->
-        <div class="flex items-center justify-start">
-            <a href="index.html" class="inline-flex items-center gap-1.5 text-xs text-stone-500 hover:text-amber-800 transition font-medium py-1 px-2.5 rounded-full hover:bg-amber-50/80">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-                </svg>
-                最初のページに戻る
-            </a>
-        </div>
-
         <!-- ヘッダーエリア -->
         <div class="text-center space-y-2">
             <div class="inline-block px-3.5 py-1 bg-amber-100/70 text-amber-900/80 rounded-full text-[11px] font-medium tracking-wider mb-1">
-                PARISIAN PIANO SALON
+                MEMBER LOGIN
             </div>
-            <h1 class="text-2xl sm:text-3xl font-normal text-stone-800 french-title tracking-wide">
-                🎹 ピアノ練習伴走 Lab
+            <h1 class="text-2xl sm:text-3xl font-normal text-stone-800 tracking-wide">
+                ログイン
             </h1>
             <p class="text-stone-500 text-xs leading-relaxed">
-                おかえりなさいませ。レッスンルームへご案内します
+                登録済みのメールアドレスとパスワードを入力してください。
             </p>
         </div>
 
         <!-- ログインフォーム -->
         <form id="loginForm" onsubmit="handleLogin(event)" class="space-y-4">
-            
-            <!-- メールアドレス入力 -->
             <div class="space-y-1.5">
                 <label for="email" class="block text-xs font-bold text-stone-600">メールアドレス</label>
                 <input type="email" id="email" required placeholder="example@email.com"
                     class="w-full bg-stone-50/80 border border-stone-200 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:border-amber-400 focus:bg-white transition placeholder:text-stone-300">
             </div>
 
-            <!-- パスワード入力 -->
             <div class="space-y-1.5">
-                <label for="password" class="block text-xs font-bold text-stone-600">パスワード</label>
-                <input type="password" id="password" required placeholder="パスワードを入力"
+                <div class="flex items-center justify-between">
+                    <label for="password" class="block text-xs font-bold text-stone-600">パスワード</label>
+                    <a href="forgot-password.html" class="text-xs text-amber-800 hover:underline font-medium">
+                        パスワードをお忘れの方
+                    </a>
+                </div>
+                <input type="password" id="password" required placeholder="••••••••"
                     class="w-full bg-stone-50/80 border border-stone-200 rounded-xl px-4 py-3 text-stone-800 text-sm focus:outline-none focus:border-amber-400 focus:bg-white transition placeholder:text-stone-300">
             </div>
 
-            <!-- ログインボタン -->
             <button type="submit" id="submitBtn"
-                class="w-full bg-stone-800 hover:bg-stone-700 text-amber-50 font-medium py-3.5 rounded-xl transition shadow-md text-sm flex items-center justify-center gap-2">
-                ログインする
+                class="w-full bg-stone-800 hover:bg-stone-700 text-amber-50 font-medium py-3.5 rounded-xl transition shadow-md text-sm flex items-center justify-center gap-2 pt-2">
+                ログイン
             </button>
         </form>
 
-        <!-- アカウント登録リンク -->
-        <div class="text-center text-xs text-stone-400 border-t border-stone-100 pt-4">
-            初めてのご利用ですか？ 
-            <a href="signup.html" class="text-amber-700 hover:text-amber-800 font-bold underline underline-offset-4">新規アカウント作成はこちら</a>
+        <!-- サインアップへの導線 -->
+        <div class="text-center pt-2 border-t border-stone-100">
+            <p class="text-xs text-stone-500">
+                アカウントをお持ちでない方は 
+                <a href="signup.html" class="text-amber-800 font-bold hover:underline">新規登録</a> 
+                へ
+            </p>
         </div>
 
     </div>
@@ -87,7 +81,6 @@
 
         async function handleLogin(event) {
             event.preventDefault();
-
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
             const submitBtn = document.getElementById('submitBtn');
@@ -98,20 +91,20 @@
 
                 const { data, error } = await supabaseClient.auth.signInWithPassword({
                     email: email,
-                    password: password,
+                    password: password
                 });
 
                 if (error) {
-                    alert('ログインエラー: ' + error.message);
+                    alert('ログインに失敗しました: ' + error.message);
                     submitBtn.disabled = false;
-                    submitBtn.innerText = 'ログインする';
+                    submitBtn.innerText = 'ログイン';
                 } else {
                     window.location.href = 'mypage.html';
                 }
             } catch (err) {
                 alert('システムエラーが発生しました: ' + err.message);
                 submitBtn.disabled = false;
-                submitBtn.innerText = 'ログインする';
+                submitBtn.innerText = 'ログイン';
             }
         }
     </script>
