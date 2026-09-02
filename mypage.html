@@ -17,16 +17,16 @@
     <script src="https://source.zoom.us/3.10.0/zoom-meeting-3.10.0.min.js"></script>
 
     <style>
-        /* スマホ画面内にピッタリ収めるためのCSS強制上書き */
+        /* PC・スマホ・iPad全対応の可変コンテナ */
         .zoom-wrapper {
             width: 100%;
-            height: calc(100dvh - 120px);
+            height: calc(100dvh - 100px);
             min-height: 400px;
             position: relative;
             overflow: hidden;
         }
 
-        /* Zoom SDKが動的に生成する要素を親要素いっぱいに拡大・収める */
+        /* Zoom SDKが動的に生成する内部要素の完全全画面化 */
         #meetingSDKElement, 
         #meetingSDKElement > div, 
         #meetingSDKElement iframe,
@@ -40,12 +40,19 @@
             margin: 0 !important;
             padding: 0 !important;
         }
+
+        /* iPad/タブレット横画面時の最適化 */
+        @media (min-width: 768px) and (orientation: landscape) {
+            .zoom-wrapper {
+                height: calc(100dvh - 80px);
+            }
+        }
     </style>
 </head>
 <body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col overflow-x-hidden">
 
     <!-- ヘッダー -->
-    <header class="bg-slate-800 border-b border-slate-700 p-3 flex justify-between items-center max-w-4xl w-full mx-auto shrink-0">
+    <header class="bg-slate-800 border-b border-slate-700 p-3 flex justify-between items-center max-w-6xl w-full mx-auto shrink-0">
         <h1 class="font-bold text-base text-indigo-400">🎹 ピアノ練習伴走 Lab</h1>
         <button onclick="handleLogout()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-1.5 px-3 rounded-lg transition">
             ログアウト
@@ -53,7 +60,7 @@
     </header>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-4xl w-full mx-auto p-2 sm:p-4 flex-1 flex flex-col gap-2">
+    <main class="max-w-6xl w-full mx-auto p-2 sm:p-4 flex-1 flex flex-col gap-2">
 
         <!-- ユーザー情報 兼 接続エリア -->
         <div id="controlPanel" class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 shrink-0">
@@ -108,7 +115,7 @@
             window.location.href = 'login.html';
         }
 
-        // カメラ・マイク事前許可リクエスト
+        // カメラ・マイク事前許可リクエスト（iPad/iOS/Android共通）
         async function requestMediaPermissions() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -171,7 +178,7 @@
                     userEmail: currentUserEmail
                 });
 
-                // 接続成功後は上のボタンを隠して全体を表示させる
+                // 接続成功後は上のボタンパネルを隠して大画面化
                 controlPanel.classList.add('hidden');
 
             } catch (error) {
