@@ -63,8 +63,6 @@
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         // Zoom設定
-        const ZOOM_CLIENT_ID = '_EER_MwpSIOV2bEDxTjhg';
-        const ZOOM_CLIENT_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
         const MEETING_NUMBER = '6538746410';
         const PASS_WORD = '';
 
@@ -89,50 +87,60 @@
             window.location.href = 'login.html';
         }
 
-        // Zoomルーム接続処理
+        // Zoomルーム接続処理（Edge Function経由で安全に署名を取得）
         async function joinZoomRoom() {
             const client = ZoomMtgEmbedded.createClient();
             const meetingSDKElement = document.getElementById('meetingSDKElement');
             const btn = document.getElementById('startZoomBtn');
 
             btn.disabled = true;
-            btn.innerText = '接続処理中...';
+            btn.innerText = '署名を取得中...';
             meetingSDKElement.classList.remove('hidden');
 
-            ZoomMtg.generateSDKSignature({
-                meetingNumber: MEETING_NUMBER,
-                sdkKey: ZOOM_CLIENT_ID,
-                sdkSecret: ZOOM_CLIENT_SECRET,
-                role: 0,
-                success: async function (res) {
-                    try {
-                        await client.init({
-                            zoomAppRoot: meetingSDKElement,
-                            language: 'ja-JP'
-                        });
+            try {
+                // Supabase Edge Function から署名を取得
+                const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-zoom-signature`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${SUPABASE_KEY}`
+                    },
+                    body: JSON.stringify({
+                        meetingNumber: MEETING_NUMBER,
+                        role: 0
+                    })
+                });
 
-                        await client.join({
-                            sdkKey: ZOOM_CLIENT_ID,
-                            signature: res.result,
-                            meetingNumber: MEETING_NUMBER,
-                            password: PASS_WORD,
-                            userName: currentUserEmail || '受講者',
-                            userEmail: currentUserEmail
-                        });
+                const data = await response.json();
 
-                        btn.innerText = '接続完了';
-                    } catch (error) {
-                        alert('Zoom接続エラー: ' + JSON.stringify(error));
-                        btn.disabled = false;
-                        btn.innerText = '📹 ルームに入室して接続する';
-                    }
-                },
-                error: function (res) {
-                    alert('署名作成エラー: ' + JSON.stringify(res));
-                    btn.disabled = false;
-                    btn.innerText = '📹 ルームに入室して接続する';
+                if (!response.ok || !data.signature) {
+                    throw new Error(data.error || '署名の取得に失敗しました');
                 }
-            });
+
+                btn.innerText = 'Zoom初期化中...';
+
+                await client.init({
+                    zoomAppRoot: meetingSDKElement,
+                    language: 'ja-JP'
+                });
+
+                btn.innerText = '接続中...';
+
+                await client.join({
+                    sdkKey: data.sdkKey,
+                    signature: data.signature,
+                    meetingNumber: MEETING_NUMBER,
+                    password: PASS_WORD,
+                    userName: currentUserEmail || '受講者',
+                    userEmail: currentUserEmail
+                });
+
+                btn.innerText = '接続完了';
+            } catch (error) {
+                alert('Zoom接続エラー: ' + error.message);
+                btn.disabled = false;
+                btn.innerText = '📹 ルームに入室して接続する';
+            }
         }
 
         checkUser();
