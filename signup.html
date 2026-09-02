@@ -1,25 +1,119 @@
-// signup.html のサインアップ処理部分
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>新規アカウント登録 - ピアノ練習伴走 Lab</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex items-center justify-center p-4">
 
-async function handleSignUp(e) {
-    e.preventDefault();
-    const email = document.getElementById('email').value;
-    const password = document.getElementById('password').value;
-    const submitBtn = document.getElementById('submitBtn');
+    <div class="max-w-md w-full bg-slate-800 rounded-2xl p-6 sm:p-8 border border-slate-700 shadow-2xl space-y-6">
+        
+        <div class="text-center space-y-2">
+            <h1 class="text-2xl font-bold text-indigo-400">🎹 ピアノ練習伴走 Lab</h1>
+            <p class="text-slate-400 text-sm">新規アカウントを作成して練習を始めましょう</p>
+        </div>
 
-    submitBtn.disabled = true;
-    submitBtn.innerText = '登録中...';
+        <form id="signupForm" onsubmit="handleSignUp(event)" class="space-y-5">
+            
+            <div class="space-y-1.5">
+                <label for="email" class="block text-xs font-bold text-slate-300">メールアドレス</label>
+                <input type="email" id="email" required placeholder="example@email.com" oninput="validateInput()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 transition">
+            </div>
 
-    const { data, error } = await supabaseClient.auth.signUp({
-        email: email,
-        password: password,
-    });
+            <div class="space-y-1.5">
+                <label for="password" class="block text-xs font-bold text-slate-300">パスワード</label>
+                <input type="password" id="password" required placeholder="6文字以上のパスワード" oninput="validateInput()"
+                    class="w-full bg-slate-900 border border-slate-700 rounded-lg px-4 py-3 text-slate-100 text-sm focus:outline-none focus:border-indigo-500 transition">
+                
+                <div id="passwordHint" class="text-xs text-rose-400 font-medium flex items-center gap-1 transition-all">
+                    <span>❌ 6文字以上入力してください</span>
+                </div>
+            </div>
 
-    if (error) {
-        alert('登録エラー: ' + error.message);
-        submitBtn.disabled = false;
-        submitBtn.innerText = 'アカウント作成';
-    } else {
-        alert('アカウント作成が完了しました！ログイン画面に移動します。');
-        window.location.href = 'login.html';
-    }
-}
+            <button type="submit" id="submitBtn" disabled
+                class="w-full bg-indigo-600 hover:bg-indigo-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-bold py-3.5 rounded-lg transition shadow-lg text-sm flex items-center justify-center gap-2">
+                アカウントを作成する
+            </button>
+        </form>
+
+        <div class="text-center text-xs text-slate-400 border-t border-slate-700/60 pt-4">
+            すでにアカウントをお持ちですか？ 
+            <a href="login.html" class="text-indigo-400 font-bold hover:underline">ログインはこちら</a>
+        </div>
+
+    </div>
+
+    <script>
+        // Supabase設定
+        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // 入力検証（リアルタイムで判定）
+        function validateInput() {
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const passwordHint = document.getElementById('passwordHint');
+            const submitBtn = document.getElementById('submitBtn');
+
+            const isEmailValid = email.length > 0 && email.includes('@');
+            const isPasswordValid = password.length >= 6;
+
+            // パスワードの入力文字数インジケーターの更新
+            if (password.length === 0) {
+                passwordHint.className = "text-xs text-slate-400 font-medium flex items-center gap-1";
+                passwordHint.innerHTML = "<span>ℹ️ 半角6文字以上で入力してください</span>";
+            } else if (isPasswordValid) {
+                passwordHint.className = "text-xs text-emerald-400 font-medium flex items-center gap-1";
+                passwordHint.innerHTML = "<span>✅ 6文字以上入力されています</span>";
+            } else {
+                passwordHint.className = "text-xs text-rose-400 font-medium flex items-center gap-1";
+                passwordHint.innerHTML = `<span>❌ あと ${6 - password.length} 文字必要です</span>`;
+            }
+
+            // 両方の条件を満たした場合のみボタンを有効化
+            if (isEmailValid && isPasswordValid) {
+                submitBtn.disabled = false;
+            } else {
+                submitBtn.disabled = true;
+            }
+        }
+
+        // サインアップ処理
+        async function handleSignUp(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            const submitBtn = document.getElementById('submitBtn');
+
+            try {
+                submitBtn.disabled = true;
+                submitBtn.innerText = '登録処理中...';
+
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                });
+
+                if (error) {
+                    alert('登録エラー: ' + error.message);
+                    submitBtn.disabled = false;
+                    submitBtn.innerText = 'アカウントを作成する';
+                } else {
+                    alert('アカウント作成が完了しました！ログイン画面へ移動します。');
+                    window.location.href = 'login.html';
+                }
+            } catch (err) {
+                alert('システムエラーが発生しました: ' + err.message);
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'アカウントを作成する';
+            }
+        }
+    </script>
+</body>
+</html>
