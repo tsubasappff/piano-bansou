@@ -14,9 +14,7 @@
     <script src="https://source.zoom.us/3.10.0/lib/vendor/redux-thunk.min.js"></script>
     <script src="https://source.zoom.us/3.10.0/lib/vendor/lodash.min.js"></script>
     <script src="https://source.zoom.us/zoom-meeting-embedded-3.10.0.min.js"></script>
-    
-    <!-- HMAC-SHA256 生成用ライブラリ -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
+    <script src="https://source.zoom.us/3.10.0/zoom-meeting-3.10.0.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
@@ -68,7 +66,7 @@
         const ZOOM_CLIENT_ID = '_EER_MwpSIOV2bEDxTjhg';
         const ZOOM_CLIENT_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
         const MEETING_NUMBER = '6538746410';
-        const PASS_WORD = ''; // パスコードなし
+        const PASS_WORD = '';
 
         let currentUserEmail = '';
 
@@ -91,35 +89,6 @@
             window.location.href = 'login.html';
         }
 
-        // 最新の公式標準形式に準拠した Signature 生成関数
-        function generateSignature(sdkKey, sdkSecret, meetingNumber, role) {
-            const iat = Math.floor(Date.now() / 1000) - 30;
-            const exp = iat + 60 * 60 * 2;
-            const oHeader = { alg: 'HS256', typ: 'JWT' };
-            
-            const oPayload = {
-                sdkKey: sdkKey,
-                appKey: sdkKey,
-                mn: meetingNumber,
-                role: role,
-                iat: iat,
-                exp: exp,
-                tokenExp: exp
-            };
-
-            const base64UrlHeader = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify(oHeader)))
-                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-            const base64UrlPayload = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify(oPayload)))
-                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-            const signatureInput = base64UrlHeader + "." + base64UrlPayload;
-            const signature = CryptoJS.HmacSHA256(signatureInput, sdkSecret);
-            const base64UrlSignature = CryptoJS.enc.Base64.stringify(signature)
-                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-
-            return signatureInput + "." + base64UrlSignature;
-        }
-
         // Zoomルーム接続処理
         async function joinZoomRoom() {
             const client = ZoomMtgEmbedded.createClient();
@@ -130,30 +99,41 @@
             btn.innerText = '接続処理中...';
             meetingSDKElement.classList.remove('hidden');
 
-            try {
-                // role: 0 (参加者) で生成
-                const signature = generateSignature(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, MEETING_NUMBER, 0);
+            // SDK標準の署名生成ロジックを使用
+            ZoomMtg.generateSDKSignature({
+                meetingNumber: MEETING_NUMBER,
+                sdkKey: ZOOM_CLIENT_ID,
+                sdkSecret: ZOOM_CLIENT_SECRET,
+                role: 0,
+                success: async function (res) {
+                    try {
+                        await client.init({
+                            zoomAppRoot: meetingSDKElement,
+                            language: 'ja-JP'
+                        });
 
-                await client.init({
-                    zoomAppRoot: meetingSDKElement,
-                    language: 'ja-JP'
-                });
+                        await client.join({
+                            sdkKey: ZOOM_CLIENT_ID,
+                            signature: res.result,
+                            meetingNumber: MEETING_NUMBER,
+                            password: PASS_WORD,
+                            userName: currentUserEmail || '受講者',
+                            userEmail: currentUserEmail
+                        });
 
-                await client.join({
-                    sdkKey: ZOOM_CLIENT_ID,
-                    signature: signature,
-                    meetingNumber: MEETING_NUMBER,
-                    password: PASS_WORD,
-                    userName: currentUserEmail || '受講者',
-                    userEmail: currentUserEmail
-                });
-
-                btn.innerText = '接続完了';
-            } catch (error) {
-                alert('Zoom接続エラー: ' + JSON.stringify(error));
-                btn.disabled = false;
-                btn.innerText = '📹 ルームに入室して接続する';
-            }
+                        btn.innerText = '接続完了';
+                    } catch (error) {
+                        alert('Zoom接続エラー: ' + JSON.stringify(error));
+                        btn.disabled = false;
+                        btn.innerText = '📹 ルームに入室して接続する';
+                    }
+                },
+                error: function (res) {
+                    alert('署名作成エラー: ' + JSON.stringify(res));
+                    btn.disabled = false;
+                    btn.innerText = '📹 ルームに入室して接続する';
+                }
+            });
         }
 
         checkUser();
