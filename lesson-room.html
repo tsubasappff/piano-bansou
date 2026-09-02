@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>オンラインレッスン室 - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -53,8 +52,8 @@
                 </p>
             </div>
 
-            <!-- Zoom 起動ボタン（アプリ/直接起動用URL） -->
-            <a id="zoom-launch-btn" href="#" target="_blank" rel="noopener noreferrer"
+            <!-- Zoom 起動ボタン（直接 Zoom リンクをセット済み） -->
+            <a href="https://zoom.us/j/6538746410?pwd=U2HNw6" target="_blank" rel="noopener noreferrer"
                 class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm">
                 <span>レッスンに参加する（Zoom起動）</span>
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -92,36 +91,5 @@
         &copy; ピアノ練習伴走 Lab
     </footer>
 
-    <script>
-        // Supabase 設定
-        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-
-        // 設定済みのZoom情報
-        const ZOOM_MEETING_NUMBER = '6538746410';
-        const ZOOM_PASSCODE = 'U2HNw6';
-
-        // 直接Zoomを起動するURLの生成
-        const zoomDirectUrl = `https://zoom.us/j/${ZOOM_MEETING_NUMBER}?pwd=${ZOOM_PASSCODE}`;
-
-        // ログインチェック
-        async function checkUser() {
-            const { data: { session }, error } = await supabaseClient.auth.getSession();
-            if (error || !session) {
-                window.location.href = 'login.html';
-            } else {
-                // ボタンのリンク先を設定
-                const launchBtn = document.getElementById('zoom-launch-btn');
-                if (launchBtn) {
-                    launchBtn.href = zoomDirectUrl;
-                }
-            }
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            checkUser();
-        });
-    </script>
 </body>
 </html>
