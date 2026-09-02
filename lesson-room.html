@@ -10,7 +10,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
-    <!-- Jitsi Meet External API -->
+    <!-- Jitsi External API -->
     <script src="https://meet.jit.si/external_api.js"></script>
 
     <style>
@@ -25,7 +25,7 @@
         }
 
         /* 画面内全画面埋め込み領域 */
-        #jitsi-container {
+        #video-container {
             display: none;
             width: 100vw;
             height: 100vh;
@@ -39,11 +39,11 @@
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- Jitsi 画面埋め込みコンテナ -->
-    <div id="jitsi-container"></div>
+    <!-- 通話画面埋め込み枠 -->
+    <div id="video-container"></div>
 
-    <!-- メインコンテンツ -->
-    <div id="app-content" class="min-h-screen flex flex-col justify-between">
+    <!-- メイン画面 -->
+    <div id="main-ui" class="min-h-screen flex flex-col justify-between">
         
         <!-- ヘッダー -->
         <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
@@ -63,19 +63,19 @@
                 
                 <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
 
-                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-amber-500/10 text-amber-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
                     🎹
                 </div>
 
                 <div class="space-y-2">
-                    <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">高音質ピアノレッスン室</h2>
+                    <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">オンラインレッスン</h2>
                     <p class="text-xs text-stone-400 leading-relaxed">
-                        ノイズキャンセリング無効化（音楽モード）で接続します。<br>時間になりましたら「レッスンに参加する」を押してください。
+                        アプリやログインは不要です。<br>時間になりましたら下のボタンを押してください。
                     </p>
                 </div>
 
-                <!-- 参加ボタン -->
-                <button id="join-btn" onclick="startJitsiLesson()" 
+                <!-- 接続スタートボタン -->
+                <button id="start-btn" onclick="openEmbeddedRoom()" 
                     class="inline-flex items-center justify-center gap-2 w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-amber-900/50 text-sm active:scale-95">
                     <span>レッスンに参加する</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -86,16 +86,16 @@
                 <!-- 入室前の確認事項 -->
                 <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
                     <h3 class="font-bold text-amber-400 flex items-center gap-1">
-                        💡 高音質レッスンのポイント
+                        💡 ご利用のご案内
                     </h3>
                     <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
                         <li class="flex gap-2">
                             <span class="text-stone-500">•</span>
-                            <span>マイク・カメラのアクセス許可ダイアログが出た場合は「許可」を選択してください。</span>
+                            <span>「マイクやカメラのアクセス権限」が表示された場合は「許可」を選択してください。</span>
                         </li>
                         <li class="flex gap-2">
                             <span class="text-stone-500">•</span>
-                            <span>ピアノの音切れを防ぐため、自動ノイズキャンセルをOFFにして接続します。</span>
+                            <span>ブラウザの画面内で直接通話が始まります。</span>
                         </li>
                     </ul>
                 </div>
@@ -116,25 +116,24 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        let userNameToUse = '受講生';
+        let studentName = '受講生';
 
-        async function getUserInfo() {
+        async function getStudentName() {
             try {
                 const { data: { session } } = await supabaseClient.auth.getSession();
                 if (session && session.user && session.user.email) {
-                    userNameToUse = session.user.email.split('@')[0];
+                    studentName = session.user.email.split('@')[0];
                 }
             } catch (e) {
                 console.log('User check bypassed');
             }
         }
 
-        function startJitsiLesson() {
-            const container = document.getElementById('jitsi-container');
+        function openEmbeddedRoom() {
+            const container = document.getElementById('video-container');
             container.style.display = 'block';
 
-            // ルーム名（固定のユニーク名）
-            const roomName = 'PianoBansouLab_LessonRoom_6538746410';
+            const roomName = 'PianoBansouLab_EmbeddedRoom_6538746410';
             const domain = 'meet.jit.si';
 
             const options = {
@@ -143,36 +142,22 @@
                 height: '100%',
                 parentNode: container,
                 userInfo: {
-                    displayName: userNameToUse
+                    displayName: studentName
                 },
                 configOverwrite: {
-                    // ★ ピアノ高音質化の設定（ノイズキャンセラー・エコーキャンセラー無効化）
-                    disableAudioLevels: false,
-                    stereo: true,
-                    enableNoAudioDetection: false,
-                    enableNoisyMicDetection: false,
-                    // ブラウザの音声処理をOFFにして原音をそのまま通す
-                    audioQuality: {
-                        stereo: true
-                    },
-                    flags: {
-                        sourceNameSignaling: true
-                    }
+                    disableDeepLinking: true, // アプリ起動のポップアップを回避
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false
                 },
                 interfaceConfigOverwrite: {
-                    TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'desktop', 'fullscreen',
-                        'f画面表示変更', 'hangup', 'chat', 'raisehand'
-                    ],
                     SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false,
-                    DEFAULT_BACKGROUND: '#1c1917'
+                    MOBILE_APP_PROMO: false
                 }
             };
 
             const api = new JitsiMeetExternalAPI(domain, options);
 
-            // 通話終了時のイベント処理
+            // 通話終了ボタン（赤色切断）を押した時にマイページに戻る
             api.addEventListener('videoConferenceLeft', () => {
                 container.style.display = 'none';
                 container.innerHTML = '';
@@ -181,7 +166,7 @@
         }
 
         window.addEventListener('DOMContentLoaded', () => {
-            getUserInfo();
+            getStudentName();
         });
     </script>
 </body>
