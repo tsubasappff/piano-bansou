@@ -6,6 +6,16 @@
     <title>マイページ - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <!-- Zoom Web SDK (Component View) -->
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/zoom-meeting-embedded-3.1.0.min.js"></script>
+    <!-- HMAC-SHA256 生成用ライブラリ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 font-sans min-h-screen">
 
@@ -18,7 +28,7 @@
     </header>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-md mx-auto p-4 space-y-6">
+    <main class="max-w-xl mx-auto p-4 space-y-6">
 
         <!-- ユーザー情報カード -->
         <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
@@ -30,11 +40,11 @@
             </div>
         </div>
 
-        <!-- Zoom接続アクションエリア -->
+        <!-- Zoom接続エリア -->
         <div class="bg-indigo-600 text-white p-6 rounded-2xl shadow-lg space-y-4">
-            <h2 class="text-xl font-bold">オンラインルーム</h2>
+            <h2 class="text-xl font-bold">オンライン練習伴走ルーム</h2>
             <p class="text-xs text-indigo-100 leading-relaxed">
-                時間になりましたら下のボタンを押して、練習伴走ミーティングルームに入室してください。
+                下の「ルームに入室する」ボタンを押すと、この画面のままZoomミーティングに接続します。（カメラ・マイクの許可ダイアログが出た場合は許可してください）
             </p>
 
             <button id="startZoomBtn" onclick="joinZoomRoom()" class="w-full bg-white text-indigo-600 font-bold py-4 rounded-xl shadow hover:bg-indigo-50 transition text-center flex items-center justify-center gap-2 text-base">
@@ -42,27 +52,34 @@
             </button>
         </div>
 
-        <!-- 通話画面表示領域（Zoom起動時に使用） -->
-        <div id="zmmtg-root" class="hidden w-full h-[500px] rounded-2xl overflow-hidden shadow-lg border border-slate-300"></div>
+        <!-- Zoom埋め込みコンテナ -->
+        <div id="meetingSDKElement" class="w-full h-[600px] bg-black rounded-2xl overflow-hidden hidden shadow-xl border border-slate-300"></div>
 
     </main>
 
     <script>
+        // Supabase設定
         const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
-        
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // ページ読み込み時にログイン状態をチェック
+        // Zoom設定（ご提示いただいたクレデンシャル）
+        const ZOOM_CLIENT_ID = '_EER_MwpSIOV2bEDxTjhg';
+        const ZOOM_CLIENT_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
+        const MEETING_NUMBER = '6538746410';
+        const PASS_WORD = ''; // パスコードなし
+
+        let currentUserEmail = '';
+
+        // ユーザー認証チェック
         async function checkUser() {
             const { data: { user } } = await supabaseClient.auth.getUser();
 
             if (!user) {
-                // ログインしていなければログイン画面に弾く
                 alert('ログインが必要です。');
                 window.location.href = 'login.html';
             } else {
-                // ログインしているメールアドレスを表示
+                currentUserEmail = user.email;
                 document.getElementById('userEmail').innerText = user.email;
             }
         }
@@ -73,9 +90,67 @@
             window.location.href = 'login.html';
         }
 
-        // Zoom室への接続テスト処理
-        function joinZoomRoom() {
-            alert('Zoom SDK連携モジュールの起動テストです。次はZoom API Keyを使用した自動接続ロジックを組み込みます！');
+        // Web SDK用 Signature 生成関数
+        function generateSignature(sdkKey, sdkSecret, meetingNumber, role) {
+            const iat = Math.round(new Date().getTime() / 1000) - 30;
+            const exp = iat + 60 * 60 * 2;
+            const oHeader = { alg: 'HS256', typ: 'JWT' };
+            const oPayload = {
+                sdkKey: sdkKey,
+                mn: meetingNumber,
+                role: role,
+                iat: iat,
+                exp: exp,
+                appKey: sdkKey,
+                tokenExp: exp
+            };
+
+            const sHeader = JSON.stringify(oHeader);
+            const sPayload = JSON.stringify(oPayload);
+
+            const base64UrlHeader = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(sHeader)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+            const base64UrlPayload = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(sPayload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+            const signatureInput = base64UrlHeader + "." + base64UrlPayload;
+            const signature = CryptoJS.HmacSHA256(signatureInput, sdkSecret);
+            const base64UrlSignature = CryptoJS.enc.Base64.stringify(signature).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+
+            return signatureInput + "." + base64UrlSignature;
+        }
+
+        // Zoomルーム接続処理
+        async function joinZoomRoom() {
+            const client = ZoomMtgEmbedded.createClient();
+            const meetingSDKElement = document.getElementById('meetingSDKElement');
+            const btn = document.getElementById('startZoomBtn');
+
+            btn.disabled = true;
+            btn.innerText = '接続処理中...';
+            meetingSDKElement.classList.remove('hidden');
+
+            try {
+                const signature = generateSignature(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, MEETING_NUMBER, 0);
+
+                await client.init({
+                    zoomAppRoot: meetingSDKElement,
+                    language: 'ja-JP'
+                });
+
+                await client.join({
+                    sdkKey: ZOOM_CLIENT_ID,
+                    signature: signature,
+                    meetingNumber: MEETING_NUMBER,
+                    password: PASS_WORD,
+                    userName: currentUserEmail || '受講者',
+                    userEmail: currentUserEmail
+                });
+
+                btn.innerText = '接続完了';
+            } catch (error) {
+                alert('Zoom接続エラー: ' + JSON.stringify(error));
+                btn.disabled = false;
+                btn.innerText = '📹 ルームに入室して接続する';
+            }
         }
 
         checkUser();
