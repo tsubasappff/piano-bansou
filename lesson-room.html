@@ -2,24 +2,38 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>オンラインレッスン室 - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Jitsi Meet API -->
-    <script src="https://meet.jit.si/external_api.js"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Zoom Web SDK CDN -->
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/3.1.0/css/bootstrap.css" />
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/3.1.0/css/react-select.css" />
 
     <style>
         body {
             font-family: 'Noto Sans JP', sans-serif;
             background-color: #1c1917;
             color: #f5f5f4;
+            /* スマホ・iPadでの不必要なスクロールや操作誤作動を防止 */
+            touch-action: manipulation;
         }
         .serif-title {
             font-family: 'Marcellus', serif;
+        }
+        /* Zoom 画面表示時のレスポンシブフルスクリーン設定 */
+        #zmmtg-root {
+            width: 100% !important;
+            height: 100% !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 9999 !important;
+            background-color: #000 !important;
         }
     </style>
 </head>
@@ -36,10 +50,56 @@
         </a>
     </header>
 
-    <!-- 通話画面エリア -->
-    <main class="flex-1 flex flex-col items-center justify-center p-2 sm:p-4 relative">
-        <div id="loading" class="text-stone-400 text-sm mb-4">レッスン室を準備中...</div>
-        <div id="meet-container" class="w-full max-w-5xl h-[75vh] bg-stone-900 rounded-2xl overflow-hidden border border-stone-800 shadow-2xl"></div>
+    <!-- メインエリア -->
+    <main class="flex-1 flex flex-col items-center justify-center p-4">
+
+        <div class="text-center space-y-6 max-w-md w-full p-6 sm:p-8 bg-stone-800/90 rounded-3xl border border-stone-700 shadow-2xl relative overflow-hidden">
+            
+            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
+
+            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
+                📹
+            </div>
+
+            <div class="space-y-2">
+                <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">オンラインレッスン</h2>
+                <p class="text-xs text-stone-400 leading-relaxed">
+                    時間になりましたら「レッスンに参加する」ボタンを押してください。
+                </p>
+            </div>
+
+            <!-- Zoom 参加ボタン -->
+            <button id="join-btn" onclick="startZoomLesson()" 
+                class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm">
+                <span>レッスンに参加する</span>
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                </svg>
+            </button>
+
+            <!-- 入室前の確認事項 -->
+            <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
+                <h3 class="font-bold text-amber-400 flex items-center gap-1">
+                    💡 入室前のご案内
+                </h3>
+                <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
+                    <li class="flex gap-2">
+                        <span class="text-stone-500">•</span>
+                        <span>講師が入室を許可するまで画面が変わらない場合があります。そのままお待ちください。</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-stone-500">•</span>
+                        <span>スマホやiPadをご利用の場合、マイクとカメラのアクセス許可ダイアログが出たら「許可」を選択してください。</span>
+                    </li>
+                    <li class="flex gap-2">
+                        <span class="text-stone-500">•</span>
+                        <span>40分で一度通信が切断された場合は、マイページより再度お入りください。</span>
+                    </li>
+                </ul>
+            </div>
+
+        </div>
+
     </main>
 
     <!-- フッター -->
@@ -47,64 +107,96 @@
         &copy; ピアノ練習伴走 Lab
     </footer>
 
+    <!-- Zoom Web SDK スクリプト類 -->
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/zoom-meeting-3.1.0.min.js"></script>
+
     <script>
+        // Supabase 設定
         const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        async function initLessonRoom() {
-            try {
-                // セッション情報の取得を正しく待機
-                const { data: { session }, error } = await supabaseClient.auth.getSession();
-                
-                if (error || !session) {
-                    console.log("未ログイン状態のためログインページへ遷移します");
-                    window.location.href = 'login.html';
-                    return;
+        // Zoom ミーティング設定（埋め込み済み）
+        const ZOOM_MEETING_NUMBER = '6538746410';
+        const ZOOM_PASSCODE = 'U2HNw6';
+        const SDK_KEY = '_EER_MwpSIOV2bEDxTjhg';
+        const SDK_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
+
+        let userDisplayName = 'ゲスト';
+
+        // ログイン状態チェック
+        async function checkUser() {
+            const { data: { session }, error } = await supabaseClient.auth.getSession();
+            if (error || !session) {
+                window.location.href = 'login.html';
+            } else {
+                if (session.user.email) {
+                    userDisplayName = session.user.email.split('@')[0];
                 }
-
-                // ローディングメッセージを非表示化
-                const loadingEl = document.getElementById('loading');
-                if (loadingEl) loadingEl.style.display = 'none';
-
-                // ユーザー固有の表示名（メールアドレスの@前）
-                const displayName = session.user.email ? session.user.email.split('@')[0] : 'ゲスト';
-
-                // Jitsi 通話画面の初期化
-                const domain = 'meet.jit.si';
-                const options = {
-                    roomName: 'PianoLab_LessonRoom_Protected_12345',
-                    width: '100%',
-                    height: '100%',
-                    parentNode: document.querySelector('#meet-container'),
-                    userInfo: {
-                        displayName: displayName
-                    },
-                    configOverwrite: {
-                        startWithAudioMuted: false,
-                        startWithVideoMuted: false,
-                        disableDeepLinking: true,
-                        prejoinPageEnabled: false
-                    },
-                    interfaceConfigOverwrite: {
-                        SHOW_JITSI_WATERMARK: false,
-                        TOOLBAR_BUTTONS: [
-                            'microphone', 'camera', 'desktop', 'fullscreen',
-                            'fading-header', 'hangup', 'chat', 'tileview'
-                        ]
-                    }
-                };
-
-                const api = new JitsiMeetExternalAPI(domain, options);
-
-            } catch (err) {
-                console.error("エラーが発生しました:", err);
             }
         }
 
-        // ページ読み込み完了後に実行
+        // SDK の初期化
+        ZoomMtg.setZoomJSLib('https://source.zoom.us/3.1.0/lib', '/av');
+        ZoomMtg.preLoadJSLibs();
+        ZoomMtg.prepareWebSDK();
+        ZoomMtg.i18n.load('ja-JP');
+        ZoomMtg.i18n.reload('ja-JP');
+
+        // Zoom入室処理
+        function startZoomLesson() {
+            const btn = document.getElementById('join-btn');
+            btn.disabled = true;
+            btn.innerText = '接続中...';
+
+            // 署名（Signature）の生成
+            const signature = ZoomMtg.generateSDKSignature({
+                meetingNumber: ZOOM_MEETING_NUMBER,
+                sdkKey: SDK_KEY,
+                sdkSecret: SDK_SECRET,
+                role: 0, // 0 = 参加者（生徒）
+                success: function (res) {
+                    initZoom(res.result);
+                },
+                error: function (err) {
+                    console.error('Signature 生成エラー:', err);
+                    alert('接続エラーが発生しました。設定をご確認ください。');
+                    btn.disabled = false;
+                    btn.innerText = 'レッスンに参加する';
+                }
+            });
+        }
+
+        function initZoom(signature) {
+            ZoomMtg.init({
+                leaveUrl: window.location.origin + '/mypage.html',
+                disableCORP: !1,
+                success: function() {
+                    ZoomMtg.join({
+                        signature: signature,
+                        sdkKey: SDK_KEY,
+                        meetingNumber: ZOOM_MEETING_NUMBER,
+                        userName: userDisplayName,
+                        passCode: ZOOM_PASSCODE,
+                        error: function(res) {
+                            console.error('Zoom Join エラー:', res);
+                            alert('入室に失敗しました。ID・パスコードをご確認ください。');
+                            const btn = document.getElementById('join-btn');
+                            btn.disabled = false;
+                            btn.innerText = 'レッスンに参加する';
+                        }
+                    });
+                }
+            });
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
-            initLessonRoom();
+            checkUser();
         });
     </script>
 </body>
