@@ -6,8 +6,10 @@
     <title>マイページ - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,400&family=Noto+Serif+JP:wght@400;600&display=swap" rel="stylesheet">
     
-    <!-- Zoom Web SDK 3.10.0 -->
     <script src="https://source.zoom.us/3.10.0/lib/vendor/react.min.js"></script>
     <script src="https://source.zoom.us/3.10.0/lib/vendor/react-dom.min.js"></script>
     <script src="https://source.zoom.us/3.10.0/lib/vendor/redux.min.js"></script>
@@ -17,16 +19,23 @@
     <script src="https://source.zoom.us/3.10.0/zoom-meeting-3.10.0.min.js"></script>
 
     <style>
-        /* PC・スマホ・iPad全対応の可変コンテナ */
+        body {
+            font-family: 'Noto Serif JP', serif;
+            background-color: #1a1615;
+            color: #f3efe6;
+        }
+        .serif-title {
+            font-family: 'Cormorant Garamond', 'Noto Serif JP', serif;
+        }
+
         .zoom-wrapper {
             width: 100%;
-            height: calc(100dvh - 100px);
+            height: calc(100dvh - 110px);
             min-height: 400px;
             position: relative;
             overflow: hidden;
         }
 
-        /* Zoom SDKが動的に生成する内部要素の完全全画面化 */
         #meetingSDKElement, 
         #meetingSDKElement > div, 
         #meetingSDKElement iframe,
@@ -41,62 +50,56 @@
             padding: 0 !important;
         }
 
-        /* iPad/タブレット横画面時の最適化 */
         @media (min-width: 768px) and (orientation: landscape) {
             .zoom-wrapper {
-                height: calc(100dvh - 80px);
+                height: calc(100dvh - 90px);
             }
         }
     </style>
 </head>
-<body class="bg-slate-900 text-slate-100 font-sans min-h-screen flex flex-col overflow-x-hidden">
+<body class="min-h-screen flex flex-col overflow-x-hidden bg-stone-950">
 
-    <!-- ヘッダー -->
-    <header class="bg-slate-800 border-b border-slate-700 p-3 flex justify-between items-center max-w-6xl w-full mx-auto shrink-0">
-        <h1 class="font-bold text-base text-indigo-400">🎹 ピアノ練習伴走 Lab</h1>
-        <button onclick="handleLogout()" class="text-xs bg-slate-700 hover:bg-slate-600 text-slate-300 font-bold py-1.5 px-3 rounded-lg transition">
+    <header class="bg-stone-900/90 border-b border-amber-900/30 p-3 flex justify-between items-center max-w-6xl w-full mx-auto shrink-0 backdrop-blur-md">
+        <div class="flex items-center gap-2">
+            <h1 class="font-semibold text-base text-amber-200 serif-title tracking-wide">🎹 ピアノ練習伴走 Lab</h1>
+        </div>
+        <button onclick="handleLogout()" class="text-xs bg-stone-800 hover:bg-stone-700 text-stone-300 font-medium py-1.5 px-3 rounded-lg border border-stone-700/60 transition">
             ログアウト
         </button>
     </header>
 
-    <!-- メインコンテンツ -->
-    <main class="max-w-6xl w-full mx-auto p-2 sm:p-4 flex-1 flex flex-col gap-2">
+    <main class="max-w-6xl w-full mx-auto p-2 sm:p-4 flex-1 flex flex-col gap-3">
 
-        <!-- ユーザー情報 兼 接続エリア -->
-        <div id="controlPanel" class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 shrink-0">
+        <div id="controlPanel" class="bg-stone-900/80 p-4 rounded-2xl border border-amber-900/30 space-y-3 shrink-0 shadow-xl">
             <div class="flex justify-between items-center text-xs">
-                <span class="text-slate-400 font-bold">ログイン：<span id="userEmail" class="text-slate-200">読み込み中...</span></span>
-                <span class="inline-flex items-center gap-1.5 bg-emerald-950 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-800">
+                <span class="text-stone-400">会員様: <span id="userEmail" class="text-amber-100 font-medium">読み込み中...</span></span>
+                <span class="inline-flex items-center gap-1.5 bg-emerald-950/80 text-emerald-300 text-[10px] px-2.5 py-0.5 rounded-full font-medium border border-emerald-800/60">
                     <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    受講可能
+                    レッスン受付中
                 </span>
             </div>
 
-            <button id="startZoomBtn" onclick="joinZoomRoom()" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3 rounded-lg shadow-lg transition text-center flex items-center justify-center gap-2 text-sm">
-                📹 ルームに入室して練習を始める
+            <button id="startZoomBtn" onclick="joinZoomRoom()" class="w-full bg-gradient-to-r from-amber-700 to-amber-800 hover:from-amber-600 hover:to-amber-700 text-amber-50 font-medium py-3.5 rounded-xl shadow-lg transition text-center flex items-center justify-center gap-2 text-sm border border-amber-600/30">
+                ☕️ オンラインサロンに入室して練習を始める
             </button>
         </div>
 
-        <!-- Zoom埋め込みコンテナ -->
-        <div id="zoomContainer" class="zoom-wrapper rounded-xl overflow-hidden hidden shadow-2xl border border-slate-800">
+        <div id="zoomContainer" class="zoom-wrapper rounded-2xl overflow-hidden hidden shadow-2xl border border-amber-900/40">
             <div id="meetingSDKElement"></div>
         </div>
 
     </main>
 
     <script>
-        // Supabase設定
         const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Zoom設定
         const MEETING_NUMBER = '6538746410';
         const PASS_WORD = 'U2HNw6';
 
         let currentUserEmail = '';
 
-        // ユーザー認証チェック
         async function checkUser() {
             const { data: { user } } = await supabaseClient.auth.getUser();
 
@@ -109,13 +112,11 @@
             }
         }
 
-        // ログアウト処理
         async function handleLogout() {
             await supabaseClient.auth.signOut();
             window.location.href = 'login.html';
         }
 
-        // カメラ・マイク事前許可リクエスト（iPad/iOS/Android共通）
         async function requestMediaPermissions() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -125,7 +126,6 @@
             }
         }
 
-        // Zoomルーム接続処理
         async function joinZoomRoom() {
             const client = ZoomMtgEmbedded.createClient();
             const meetingSDKElement = document.getElementById('meetingSDKElement');
@@ -134,11 +134,11 @@
             const controlPanel = document.getElementById('controlPanel');
 
             btn.disabled = true;
-            btn.innerText = 'カメラ・マイク準備中...';
+            btn.innerText = 'カメラ・マイクの接続準備中...';
 
             await requestMediaPermissions();
 
-            btn.innerText = '接続準備中...';
+            btn.innerText = 'レッスンルームへ接続中...';
             zoomContainer.classList.remove('hidden');
 
             try {
@@ -167,7 +167,7 @@
                     language: 'ja-JP'
                 });
 
-                btn.innerText = '接続中...';
+                btn.innerText = '接続完了';
 
                 await client.join({
                     sdkKey: data.sdkKey,
@@ -178,13 +178,12 @@
                     userEmail: currentUserEmail
                 });
 
-                // 接続成功後は上のボタンパネルを隠して大画面化
                 controlPanel.classList.add('hidden');
 
             } catch (error) {
                 alert('Zoom接続エラー: ' + error.message);
                 btn.disabled = false;
-                btn.innerText = '📹 ルームに入室して練習を始める';
+                btn.innerText = '☕️ オンラインサロンに入室して練習を始める';
             }
         }
 
