@@ -3,81 +3,89 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>無料体験アカウント作成 - ピアノ練習伴走 Lab</title>
+    <title>新規登録 - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 font-sans min-h-screen flex flex-col justify-between">
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen flex items-center justify-center p-4">
 
-    <!-- ヘッダー -->
-    <header class="bg-white border-b border-slate-200 py-3 px-4">
-        <div class="max-w-md mx-auto flex justify-between items-center">
-            <a href="index.html" class="font-bold text-sm text-indigo-600">🎹 ピアノ練習伴走 Lab</a>
-            <a href="login.html" class="text-xs text-slate-500 hover:text-indigo-600 font-semibold">ログインはこちら</a>
+    <div class="bg-white p-8 rounded-2xl shadow-md w-full max-w-md border border-slate-200">
+        <div class="text-center mb-6">
+            <span class="bg-indigo-100 text-indigo-700 text-xs font-bold px-3 py-1 rounded-full">無料体験お申し込み</span>
+            <h2 class="text-2xl font-bold text-slate-900 mt-2">アカウントを作成</h2>
+            <p class="text-xs text-slate-500 mt-1">1分で完了。体験期間中の自動課金はありません。</p>
         </div>
-    </header>
-
-    <!-- メインコンテンツ -->
-    <main class="max-w-md mx-auto w-full px-4 py-8">
-        <div class="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-            <div class="text-center mb-6">
-                <span class="bg-indigo-100 text-indigo-700 text-[10px] font-bold px-2.5 py-1 rounded-full">無料体験お申し込み</span>
-                <h1 class="text-xl font-extrabold text-slate-900 mt-2">アカウントを作成</h1>
-                <p class="text-xs text-slate-500 mt-1">1分で完了。体験期間中の自動課金はありません。</p>
+        
+        <form id="signupForm" class="space-y-4">
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">メールアドレス</label>
+                <input type="email" id="email" placeholder="example@email.com" required class="w-full p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
-
-            <form onsubmit="handleSignUp(event)" class="space-y-4">
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">メールアドレス</label>
-                    <input type="email" id="email" autofocus required placeholder="example@email.com" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                <div>
-                    <label class="block text-xs font-semibold text-slate-600 mb-1">パスワード（6文字以上）</label>
-                    <input type="password" id="password" required minlength="6" placeholder="••••••••" class="w-full border border-slate-300 rounded-xl p-3 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                </div>
-                
-                <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-bold py-3.5 rounded-xl shadow hover:bg-indigo-700 transition text-sm">
-                    無料で体験をはじめる ➔
-                </button>
-            </form>
-
-            <!-- 安心感を与えるマイクロコピー -->
-            <div class="mt-6 pt-4 border-t border-slate-100 text-center space-y-1.5 text-[11px] text-slate-400">
-                <p>✔ クレジットカード登録不要</p>
-                <p>✔ アプリインストール不要（ブラウザでOK）</p>
+            <div>
+                <label class="block text-xs font-bold text-slate-600 mb-1">パスワード（6文字以上）</label>
+                <input type="password" id="password" placeholder="••••••••" required minlength="6" class="w-full p-3 rounded-lg border border-slate-300 focus:outline-none focus:ring-2 focus:ring-indigo-500">
             </div>
+            
+            <button type="submit" id="submitBtn" class="w-full bg-indigo-600 text-white font-bold py-3 rounded-lg hover:bg-indigo-700 transition flex items-center justify-center gap-2">
+                無料で体験をはじめる ➔
+            </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-slate-100 text-center text-xs text-slate-500 space-y-1">
+            <p>✔ クレジットカード登録不要</p>
+            <p>✔ アプリインストール不要（ブラウザでOK）</p>
         </div>
-    </main>
-
-    <footer class="py-4 text-center text-[10px] text-slate-400">
-        © ピアノ練習伴走 Lab
-    </footer>
+    </div>
 
     <script>
-        const SUPABASE_URL = 'https://flzguqgdltwzuxudolg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY'; // ※ご自身のanon keyに置き換えてください
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Supabase設定（提供いただいた情報で固定）
+        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
 
-        async function handleSignUp(e) {
-            e.preventDefault();
-            const btn = document.getElementById('submitBtn');
-            btn.disabled = true;
-            btn.innerText = '登録処理中...';
+        let supabaseClient;
+
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        } catch (e) {
+            alert('Supabase初期化エラー: ' + e.message);
+        }
+
+        document.getElementById('signupForm').addEventListener('submit', async (e) => {
+            e.preventDefault(); // 画面リロードを防止
+            
+            if (!supabaseClient) {
+                alert('Supabaseの読み込みに失敗しました。');
+                return;
+            }
 
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
+            const btn = document.getElementById('submitBtn');
 
-            const { data, error } = await supabase.auth.signUp({ email, password });
+            btn.disabled = true;
+            btn.innerText = '登録処理中...';
 
-            if (error) {
-                alert('登録エラー: ' + error.message);
+            try {
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password
+                });
+
+                if (error) {
+                    alert('登録エラー: ' + error.message);
+                    btn.disabled = false;
+                    btn.innerText = '無料で体験をはじめる ➔';
+                } else {
+                    alert('登録が成功しました！マイページへ移動します。');
+                    window.location.href = 'mypage.html';
+                }
+
+            } catch (err) {
+                alert('通信エラー: ' + err.message);
                 btn.disabled = false;
                 btn.innerText = '無料で体験をはじめる ➔';
-            } else {
-                alert('アカウントの作成が完了しました！マイページに移動します。');
-                window.location.href = 'mypage.html';
             }
-        }
+        });
     </script>
 </body>
 </html>
