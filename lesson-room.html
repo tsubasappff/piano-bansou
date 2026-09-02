@@ -5,9 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>オンラインレッスン室 - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <!-- Zoom Web SDK スタイル -->
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/3.1.0/css/bootstrap.css" />
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/3.1.0/css/react-select.css" />
 
     <style>
         body {
@@ -19,77 +24,187 @@
         .serif-title {
             font-family: 'Marcellus', serif;
         }
+        /* Zoom 画面が起動した際にサイト内で全画面表示するための設定 */
+        #zmmtg-root {
+            display: none;
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 99999 !important;
+            background-color: #000 !important;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- ヘッダー -->
-    <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
-        <div class="flex items-center gap-2">
-            <span class="text-xl">🎹</span>
-            <span class="font-medium text-amber-100 serif-title text-sm sm:text-base">オンラインレッスン室</span>
-        </div>
-        <a href="mypage.html" class="text-xs text-stone-400 hover:text-white px-3 py-1.5 rounded-lg border border-stone-700 hover:bg-stone-800 transition">
-            マイページへ戻る
-        </a>
-    </header>
+    <!-- Zoom 画面が挿入される要素 -->
+    <div id="zmmtg-root"></div>
 
-    <!-- メインエリア -->
-    <main class="flex-1 flex flex-col items-center justify-center p-4">
-
-        <div class="text-center space-y-6 max-w-md w-full p-6 sm:p-8 bg-stone-800/90 rounded-3xl border border-stone-700 shadow-2xl relative overflow-hidden">
-            
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
-
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
-                📹
+    <!-- 通常のサイト表示領域 -->
+    <div id="main-content" class="min-h-screen flex flex-col justify-between">
+        
+        <!-- ヘッダー -->
+        <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🎹</span>
+                <span class="font-medium text-amber-100 serif-title text-sm sm:text-base">オンラインレッスン室</span>
             </div>
-
-            <div class="space-y-2">
-                <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">オンラインレッスン</h2>
-                <p class="text-xs text-stone-400 leading-relaxed">
-                    時間になりましたら下のボタンを押してご入室ください。
-                </p>
-            </div>
-
-            <!-- Zoom 起動ボタン（直接 Zoom リンクをセット済み） -->
-            <a href="https://zoom.us/j/6538746410?pwd=U2HNw6" target="_blank" rel="noopener noreferrer"
-                class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm">
-                <span>レッスンに参加する（Zoom起動）</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
+            <a href="mypage.html" class="text-xs text-stone-400 hover:text-white px-3 py-1.5 rounded-lg border border-stone-700 hover:bg-stone-800 transition">
+                マイページへ戻る
             </a>
+        </header>
 
-            <!-- 入室前の確認事項 -->
-            <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
-                <h3 class="font-bold text-amber-400 flex items-center gap-1">
-                    💡 ご利用のご案内
-                </h3>
-                <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
-                    <li class="flex gap-2">
-                        <span class="text-stone-500">•</span>
-                        <span>「レッスンに参加する」を押すとZoomアプリ（またはブラウザ）が自動起動します。</span>
-                    </li>
-                    <li class="flex gap-2">
-                        <span class="text-stone-500">•</span>
-                        <span>講師が入室を許可するまで待機画面でお待ちください。</span>
-                    </li>
-                    <li class="flex gap-2">
-                        <span class="text-stone-500">•</span>
-                        <span>40分で切断された場合は、マイページより再度お入りください。</span>
-                    </li>
-                </ul>
+        <!-- メインエリア -->
+        <main class="flex-1 flex flex-col items-center justify-center p-4">
+
+            <div class="text-center space-y-6 max-w-md w-full p-6 sm:p-8 bg-stone-800/90 rounded-3xl border border-stone-700 shadow-2xl relative overflow-hidden">
+                
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
+
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
+                    📹
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">画面内 Zoom レッスン</h2>
+                    <p class="text-xs text-stone-400 leading-relaxed">
+                        ログイン不要でそのまま通話が始まります。<br>時間になりましたら下のボタンを押してください。
+                    </p>
+                </div>
+
+                <!-- Zoom 埋め込み参加ボタン -->
+                <button id="join-btn" onclick="startEmbeddedZoom()" 
+                    class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm">
+                    <span>レッスンに参加する</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+
+                <!-- 入室前の確認事項 -->
+                <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
+                    <h3 class="font-bold text-amber-400 flex items-center gap-1">
+                        💡 ご利用のご案内
+                    </h3>
+                    <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
+                        <li class="flex gap-2">
+                            <span class="text-stone-500">•</span>
+                            <span>マイクとカメラのアクセス許可ダイアログが出た場合は「許可」を選択してください。</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-stone-500">•</span>
+                            <span>講師が入室を許可するまで画面が変わらない場合があります。そのままお待ちください。</span>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
 
-        </div>
+        </main>
 
-    </main>
+        <!-- フッター -->
+        <footer class="text-center py-3 text-xs text-stone-500 border-t border-stone-900">
+            &copy; ピアノ練習伴走 Lab
+        </footer>
+    </div>
 
-    <!-- フッター -->
-    <footer class="text-center py-3 text-xs text-stone-500 border-t border-stone-900">
-        &copy; ピアノ練習伴走 Lab
-    </footer>
+    <!-- Zoom SDK 必須ライブラリ -->
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/zoom-meeting-3.1.0.min.js"></script>
 
+    <script>
+        // Supabase 設定
+        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Zoom 接続情報
+        const ZOOM_MEETING_NUMBER = '6538746410';
+        const ZOOM_PASSCODE = 'U2HNw6';
+        const SDK_KEY = '_EER_MwpSIOV2bEDxTjhg';
+        const SDK_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
+
+        let userDisplayName = '受講生';
+
+        // ログイン状態チェック
+        async function checkUser() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user.email) {
+                    userDisplayName = session.user.email.split('@')[0];
+                }
+            } catch (e) {
+                console.log('ログイン確認スキップ');
+            }
+        }
+
+        // SDK 初期化の事前準備
+        ZoomMtg.setZoomJSLib('https://source.zoom.us/3.1.0/lib', '/av');
+        ZoomMtg.preLoadJSLibs();
+        ZoomMtg.prepareWebSDK();
+        ZoomMtg.i18n.load('ja-JP');
+
+        // ボタンクリックでZoom埋め込み起動
+        function startEmbeddedZoom() {
+            const btn = document.getElementById('join-btn');
+            btn.disabled = true;
+            btn.innerText = '通信接続中...';
+
+            // 署名の生成
+            const signature = ZoomMtg.generateSDKSignature({
+                meetingNumber: ZOOM_MEETING_NUMBER,
+                sdkKey: SDK_KEY,
+                sdkSecret: SDK_SECRET,
+                role: 0, // 生徒（一般参加者）
+                success: function (res) {
+                    runZoomJoin(res.result);
+                },
+                error: function (err) {
+                    console.error('Signature Error:', err);
+                    alert('接続準備に失敗しました。ページを再読み込みしてください。');
+                    btn.disabled = false;
+                    btn.innerText = 'レッスンに参加する';
+                }
+            });
+        }
+
+        function runZoomJoin(signature) {
+            // Zoomルート要素を表示
+            const zoomRoot = document.getElementById('zmmtg-root');
+            if (zoomRoot) zoomRoot.style.display = 'block';
+
+            ZoomMtg.init({
+                leaveUrl: window.location.href,
+                disableCORP: !1,
+                success: function() {
+                    ZoomMtg.join({
+                        signature: signature,
+                        sdkKey: SDK_KEY,
+                        meetingNumber: ZOOM_MEETING_NUMBER,
+                        userName: userDisplayName,
+                        passCode: ZOOM_PASSCODE,
+                        error: function(res) {
+                            console.error('Join Error:', res);
+                            alert('Zoomへの接続に失敗しました。');
+                            if (zoomRoot) zoomRoot.style.display = 'none';
+                            const btn = document.getElementById('join-btn');
+                            btn.disabled = false;
+                            btn.innerText = 'レッスンに参加する';
+                        }
+                    });
+                }
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            checkUser();
+        });
+    </script>
 </body>
 </html>
