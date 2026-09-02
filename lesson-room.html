@@ -10,6 +10,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
+    <!-- Jitsi Meet External API -->
+    <script src="https://meet.jit.si/external_api.js"></script>
+
     <style>
         body {
             font-family: 'Noto Sans JP', sans-serif;
@@ -20,76 +23,95 @@
         .serif-title {
             font-family: 'Marcellus', serif;
         }
+
+        /* 画面内全画面埋め込み領域 */
+        #jitsi-container {
+            display: none;
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 99999;
+            background-color: #000;
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- ヘッダー -->
-    <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
-        <div class="flex items-center gap-2">
-            <span class="text-xl">🎹</span>
-            <span class="font-medium text-amber-100 serif-title text-sm sm:text-base">オンラインレッスン室</span>
-        </div>
-        <a href="mypage.html" class="text-xs text-stone-400 hover:text-white px-3 py-1.5 rounded-lg border border-stone-700 hover:bg-stone-800 transition">
-            マイページへ戻る
-        </a>
-    </header>
+    <!-- Jitsi 画面埋め込みコンテナ -->
+    <div id="jitsi-container"></div>
 
-    <!-- メインエリア -->
-    <main class="flex-1 flex flex-col items-center justify-center p-4">
+    <!-- メインコンテンツ -->
+    <div id="app-content" class="min-h-screen flex flex-col justify-between">
+        
+        <!-- ヘッダー -->
+        <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
+            <div class="flex items-center gap-2">
+                <span class="text-xl">🎹</span>
+                <span class="font-medium text-amber-100 serif-title text-sm sm:text-base">オンラインレッスン室</span>
+            </div>
+            <a href="mypage.html" class="text-xs text-stone-400 hover:text-white px-3 py-1.5 rounded-lg border border-stone-700 hover:bg-stone-800 transition">
+                マイページへ戻る
+            </a>
+        </header>
 
-        <div class="text-center space-y-6 max-w-md w-full p-6 sm:p-8 bg-stone-800/90 rounded-3xl border border-stone-700 shadow-2xl relative overflow-hidden">
-            
-            <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
+        <!-- メインエリア -->
+        <main class="flex-1 flex flex-col items-center justify-center p-4">
 
-            <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
-                📹
+            <div class="text-center space-y-6 max-w-md w-full p-6 sm:p-8 bg-stone-800/90 rounded-3xl border border-stone-700 shadow-2xl relative overflow-hidden">
+                
+                <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-amber-600 via-amber-400 to-amber-600"></div>
+
+                <div class="w-14 h-14 sm:w-16 sm:h-16 bg-blue-500/10 text-blue-400 rounded-2xl flex items-center justify-center mx-auto text-2xl sm:text-3xl">
+                    🎹
+                </div>
+
+                <div class="space-y-2">
+                    <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">高音質ピアノレッスン室</h2>
+                    <p class="text-xs text-stone-400 leading-relaxed">
+                        ノイズキャンセリング無効化（音楽モード）で接続します。<br>時間になりましたら「レッスンに参加する」を押してください。
+                    </p>
+                </div>
+
+                <!-- 参加ボタン -->
+                <button id="join-btn" onclick="startJitsiLesson()" 
+                    class="inline-flex items-center justify-center gap-2 w-full bg-amber-600 hover:bg-amber-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-amber-900/50 text-sm active:scale-95">
+                    <span>レッスンに参加する</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                    </svg>
+                </button>
+
+                <!-- 入室前の確認事項 -->
+                <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
+                    <h3 class="font-bold text-amber-400 flex items-center gap-1">
+                        💡 高音質レッスンのポイント
+                    </h3>
+                    <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
+                        <li class="flex gap-2">
+                            <span class="text-stone-500">•</span>
+                            <span>マイク・カメラのアクセス許可ダイアログが出た場合は「許可」を選択してください。</span>
+                        </li>
+                        <li class="flex gap-2">
+                            <span class="text-stone-500">•</span>
+                            <span>ピアノの音切れを防ぐため、自動ノイズキャンセルをOFFにして接続します。</span>
+                        </li>
+                    </ul>
+                </div>
+
             </div>
 
-            <div class="space-y-2">
-                <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">オンラインレッスン</h2>
-                <p class="text-xs text-stone-400 leading-relaxed">
-                    パスコードの入力は不要です。<br>時間になりましたら下のボタンを押してご入室ください。
-                </p>
-            </div>
+        </main>
 
-            <!-- Zoom 接続ボタン -->
-            <button onclick="startLesson()" 
-                class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm active:scale-95">
-                <span>レッスンに参加する</span>
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                </svg>
-            </button>
-
-            <!-- 入室前の確認事項 -->
-            <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
-                <h3 class="font-bold text-amber-400 flex items-center gap-1">
-                    💡 ご利用のご案内
-                </h3>
-                <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
-                    <li class="flex gap-2">
-                        <span class="text-stone-500">•</span>
-                        <span>ボタンを押すと直接Zoom画面が開きます。パスコード入力は不要です。</span>
-                    </li>
-                    <li class="flex gap-2">
-                        <span class="text-stone-500">•</span>
-                        <span>マイク・カメラの許可を求められた場合は「許可」を選択してください。</span>
-                    </li>
-                </ul>
-            </div>
-
-        </div>
-
-    </main>
-
-    <!-- フッター -->
-    <footer class="text-center py-3 text-xs text-stone-500 border-t border-stone-900">
-        &copy; ピアノ練習伴走 Lab
-    </footer>
+        <!-- フッター -->
+        <footer class="text-center py-3 text-xs text-stone-500 border-t border-stone-900">
+            &copy; ピアノ練習伴走 Lab
+        </footer>
+    </div>
 
     <script>
-        // Supabase 設定（ユーザー名取得用）
+        // Supabase 設定
         const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
@@ -107,14 +129,55 @@
             }
         }
 
-        function startLesson() {
-            const meetingId = '6538746410';
-            const passCode = 'U2HNw6';
-            
-            // パスコード・名前を事前にパラメータに埋め込んで起動（入力スキップ）
-            const zoomUrl = `https://zoom.us/wc/join/${meetingId}?pwd=${passCode}&uname=${encodeURIComponent(userNameToUse)}`;
-            
-            window.open(zoomUrl, '_blank');
+        function startJitsiLesson() {
+            const container = document.getElementById('jitsi-container');
+            container.style.display = 'block';
+
+            // ルーム名（固定のユニーク名）
+            const roomName = 'PianoBansouLab_LessonRoom_6538746410';
+            const domain = 'meet.jit.si';
+
+            const options = {
+                roomName: roomName,
+                width: '100%',
+                height: '100%',
+                parentNode: container,
+                userInfo: {
+                    displayName: userNameToUse
+                },
+                configOverwrite: {
+                    // ★ ピアノ高音質化の設定（ノイズキャンセラー・エコーキャンセラー無効化）
+                    disableAudioLevels: false,
+                    stereo: true,
+                    enableNoAudioDetection: false,
+                    enableNoisyMicDetection: false,
+                    // ブラウザの音声処理をOFFにして原音をそのまま通す
+                    audioQuality: {
+                        stereo: true
+                    },
+                    flags: {
+                        sourceNameSignaling: true
+                    }
+                },
+                interfaceConfigOverwrite: {
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'desktop', 'fullscreen',
+                        'f画面表示変更', 'hangup', 'chat', 'raisehand'
+                    ],
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false,
+                    DEFAULT_BACKGROUND: '#1c1917'
+                }
+            };
+
+            const api = new JitsiMeetExternalAPI(domain, options);
+
+            // 通話終了時のイベント処理
+            api.addEventListener('videoConferenceLeft', () => {
+                container.style.display = 'none';
+                container.innerHTML = '';
+                window.location.href = 'mypage.html';
+            });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
