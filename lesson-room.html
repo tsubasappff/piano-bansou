@@ -9,6 +9,10 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
 
+    <!-- Zoom Web SDK CSS -->
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/3.1.0/css/bootstrap.css" />
+    <link type="text/css" rel="stylesheet" href="https://source.zoom.us/3.1.0/css/react-select.css" />
+
     <style>
         body {
             font-family: 'Noto Sans JP', sans-serif;
@@ -19,38 +23,33 @@
         .serif-title {
             font-family: 'Marcellus', serif;
         }
-        /* 画面内埋め込み用フレームのスタイル */
-        #zoom-frame-container {
+
+        /* スマホ・iPad・PC共通の全画面Zoom表示領域 */
+        #zmmtg-root {
             display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: 99999;
-            background-color: #000;
+            width: 100vw !important;
+            height: 100vh !important;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            z-index: 99999 !important;
+            background-color: #1c1917 !important;
         }
-        #zoom-iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
+
+        /* モバイル表示時のUI調整 */
+        #zmmtg-root iframe {
+            width: 100% !important;
+            height: 100% !important;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- 埋め込み表示エリア -->
-    <div id="zoom-frame-container">
-        <div class="absolute top-3 right-3 z-50">
-            <button onclick="closeZoomFrame()" class="bg-stone-800/80 text-white text-xs px-3 py-1.5 rounded-lg border border-stone-600 hover:bg-stone-700">
-                ✕ 退出してマイページへ
-            </button>
-        </div>
-        <iframe id="zoom-iframe" allow="camera; microphone; display-capture"></iframe>
-    </div>
+    <!-- Zoom 埋め込みコンテナ -->
+    <div id="zmmtg-root"></div>
 
-    <!-- 通常の画面表示エリア -->
-    <div id="main-ui" class="min-h-screen flex flex-col justify-between">
+    <!-- 通常Web画面 -->
+    <div id="app-container" class="min-h-screen flex flex-col justify-between">
         
         <!-- ヘッダー -->
         <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
@@ -77,13 +76,13 @@
                 <div class="space-y-2">
                     <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">オンラインレッスン</h2>
                     <p class="text-xs text-stone-400 leading-relaxed">
-                        Zoomログイン不要でそのまま接続します。<br>時間になりましたら下のボタンを押してください。
+                        Zoomログインは不要です。<br>時間になりましたら下のボタンを押してご入室ください。
                     </p>
                 </div>
 
-                <!-- Zoom 埋め込みスタートボタン -->
-                <button onclick="startZoomLesson()" 
-                    class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm">
+                <!-- 参加ボタン -->
+                <button id="join-btn" onclick="joinLesson()" 
+                    class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm active:scale-95">
                     <span>レッスンに参加する</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -93,16 +92,16 @@
                 <!-- 入室前の確認事項 -->
                 <div class="text-left space-y-3 bg-stone-900/80 p-4 rounded-xl border border-stone-700/50 text-xs">
                     <h3 class="font-bold text-amber-400 flex items-center gap-1">
-                        💡 ご利用のご案内
+                        💡 スマホ・iPadでのご案内
                     </h3>
                     <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
                         <li class="flex gap-2">
                             <span class="text-stone-500">•</span>
-                            <span>カメラやマイクの許可ダイアログが出た場合は「許可」を選択してください。</span>
+                            <span>マイクやカメラの使用許可が表示されたら「許可」をタップしてください。</span>
                         </li>
                         <li class="flex gap-2">
                             <span class="text-stone-500">•</span>
-                            <span>講師が入室を許可するまで待機画面でお待ちください。</span>
+                            <span>講師が入室を許可するまで待機画面のままお待ちください。</span>
                         </li>
                     </ul>
                 </div>
@@ -117,26 +116,88 @@
         </footer>
     </div>
 
-    <script>
-        // 設定済みのZoomWeb直接参加URL
-        const ZOOM_EMBED_URL = "https://zoom.us/wc/join/6538746410?pwd=U2HNw6";
+    <!-- Zoom SDK Scripts -->
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/3.1.0/zoom-meeting-3.1.0.min.js"></script>
 
-        function startZoomLesson() {
-            const container = document.getElementById('zoom-frame-container');
-            const iframe = document.getElementById('zoom-iframe');
-            
-            // 埋め込みURLをセットして表示
-            iframe.src = ZOOM_EMBED_URL;
-            container.style.display = 'block';
+    <script>
+        // 設定済みのZoomパラメータ
+        const MEET_ID = '6538746410';
+        const PASS_CODE = 'U2HNw6';
+        const SDK_KEY = '_EER_MwpSIOV2bEDxTjhg';
+        const SDK_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
+
+        // 事前にSDKライブラリを準備
+        try {
+            ZoomMtg.setZoomJSLib('https://source.zoom.us/3.1.0/lib', '/av');
+            ZoomMtg.preLoadJSLibs();
+            ZoomMtg.prepareWebSDK();
+            ZoomMtg.i18n.load('ja-JP');
+        } catch (e) {
+            console.error('SDK Initialization Error:', e);
         }
 
-        function closeZoomFrame() {
-            const container = document.getElementById('zoom-frame-container');
-            const iframe = document.getElementById('zoom-iframe');
+        function joinLesson() {
+            const btn = document.getElementById('join-btn');
+            btn.disabled = true;
+            btn.innerText = '接続中...';
+
+            // 署名生成
+            const signature = ZoomMtg.generateSDKSignature({
+                meetingNumber: MEET_ID,
+                sdkKey: SDK_KEY,
+                sdkSecret: SDK_SECRET,
+                role: 0,
+                success: function (res) {
+                    startMeeting(res.result);
+                },
+                error: function (err) {
+                    console.error('Signature Error:', err);
+                    alert('接続エラーが発生しました。時間を置いて再度お試しください。');
+                    btn.disabled = false;
+                    btn.innerText = 'レッスンに参加する';
+                }
+            });
+        }
+
+        function startMeeting(signature) {
+            const zoomRoot = document.getElementById('zmmtg-root');
             
-            iframe.src = "";
-            container.style.display = 'none';
-            window.location.href = "mypage.html";
+            ZoomMtg.init({
+                leaveUrl: window.location.href,
+                disableCORP: !1,
+                success: function() {
+                    // 成功したタイミングでZoom画面を表示領域にする（真っ黒フリーズ防止）
+                    if (zoomRoot) zoomRoot.style.display = 'block';
+
+                    ZoomMtg.join({
+                        signature: signature,
+                        sdkKey: SDK_KEY,
+                        meetingNumber: MEET_ID,
+                        userName: '受講生',
+                        passCode: PASS_CODE,
+                        error: function(res) {
+                            console.error('Join Error:', res);
+                            alert('入室に失敗しました。');
+                            if (zoomRoot) zoomRoot.style.display = 'none';
+                            const btn = document.getElementById('join-btn');
+                            btn.disabled = false;
+                            btn.innerText = 'レッスンに参加する';
+                        }
+                    });
+                },
+                error: function(res) {
+                    console.error('Init Error:', res);
+                    alert('画面の初期化に失敗しました。');
+                    const btn = document.getElementById('join-btn');
+                    btn.disabled = false;
+                    btn.innerText = 'レッスンに参加する';
+                }
+            });
         }
     </script>
 </body>
