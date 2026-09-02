@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>オンラインレッスン室 - ピアノ練習伴走 Lab</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
@@ -24,7 +25,7 @@
             font-family: 'Marcellus', serif;
         }
 
-        /* スマホ・iPad・PC共通の全画面Zoom表示領域 */
+        /* 全画面 Zoom 埋め込みエリア */
         #zmmtg-root {
             display: none;
             width: 100vw !important;
@@ -33,23 +34,17 @@
             top: 0 !important;
             left: 0 !important;
             z-index: 99999 !important;
-            background-color: #1c1917 !important;
-        }
-
-        /* モバイル表示時のUI調整 */
-        #zmmtg-root iframe {
-            width: 100% !important;
-            height: 100% !important;
+            background-color: #000 !important;
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between">
 
-    <!-- Zoom 埋め込みコンテナ -->
+    <!-- Zoom 画面埋め込み枠 -->
     <div id="zmmtg-root"></div>
 
-    <!-- 通常Web画面 -->
-    <div id="app-container" class="min-h-screen flex flex-col justify-between">
+    <!-- メインコンテンツ -->
+    <div id="app-content" class="min-h-screen flex flex-col justify-between">
         
         <!-- ヘッダー -->
         <header class="flex items-center justify-between p-4 bg-stone-900/90 backdrop-blur-sm border-b border-stone-800">
@@ -76,13 +71,13 @@
                 <div class="space-y-2">
                     <h2 class="text-lg sm:text-xl font-bold text-stone-100 tracking-wide">オンラインレッスン</h2>
                     <p class="text-xs text-stone-400 leading-relaxed">
-                        Zoomログインは不要です。<br>時間になりましたら下のボタンを押してご入室ください。
+                        パスコードや名前の入力は不要です。<br>時間になりましたら下のボタンを押してください。
                     </p>
                 </div>
 
                 <!-- 参加ボタン -->
-                <button id="join-btn" onclick="joinLesson()" 
-                    class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm active:scale-95">
+                <button id="join-btn" onclick="startZoomLesson()" 
+                    class="inline-flex items-center justify-center gap-2 w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3.5 sm:py-4 rounded-xl transition shadow-lg shadow-blue-900/50 text-sm">
                     <span>レッスンに参加する</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
@@ -97,11 +92,11 @@
                     <ul class="text-stone-300 space-y-2 text-[11px] leading-relaxed">
                         <li class="flex gap-2">
                             <span class="text-stone-500">•</span>
-                            <span>マイクやカメラの使用許可が表示されたら「許可」をタップしてください。</span>
+                            <span>マイクやカメラのアクセス確認が出た場合は「許可」を選択してください。</span>
                         </li>
                         <li class="flex gap-2">
                             <span class="text-stone-500">•</span>
-                            <span>講師が入室を許可するまで待機画面のままお待ちください。</span>
+                            <span>講師が入室を許可するまで待機画面でお待ちください。</span>
                         </li>
                     </ul>
                 </div>
@@ -116,7 +111,7 @@
         </footer>
     </div>
 
-    <!-- Zoom SDK Scripts -->
+    <!-- Zoom SDK Dependencies -->
     <script src="https://source.zoom.us/3.1.0/lib/vendor/react.min.js"></script>
     <script src="https://source.zoom.us/3.1.0/lib/vendor/react-dom.min.js"></script>
     <script src="https://source.zoom.us/3.1.0/lib/vendor/redux.min.js"></script>
@@ -125,65 +120,78 @@
     <script src="https://source.zoom.us/3.1.0/zoom-meeting-3.1.0.min.js"></script>
 
     <script>
-        // 設定済みのZoomパラメータ
-        const MEET_ID = '6538746410';
-        const PASS_CODE = 'U2HNw6';
+        // Supabase 設定
+        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // Zoom 情報（埋め込み済み）
+        const ZOOM_MEETING_NUMBER = '6538746410';
+        const ZOOM_PASSCODE = 'U2HNw6';
         const SDK_KEY = '_EER_MwpSIOV2bEDxTjhg';
         const SDK_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
 
-        // 事前にSDKライブラリを準備
-        try {
-            ZoomMtg.setZoomJSLib('https://source.zoom.us/3.1.0/lib', '/av');
-            ZoomMtg.preLoadJSLibs();
-            ZoomMtg.prepareWebSDK();
-            ZoomMtg.i18n.load('ja-JP');
-        } catch (e) {
-            console.error('SDK Initialization Error:', e);
+        let userNameToUse = '受講生';
+
+        // ログイン中のメールアドレスから受講生名を取得
+        async function getUserInfo() {
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                if (session && session.user && session.user.email) {
+                    userNameToUse = session.user.email.split('@')[0];
+                }
+            } catch (e) {
+                console.log('User check bypassed');
+            }
         }
 
-        function joinLesson() {
+        // SDK 初期化
+        ZoomMtg.setZoomJSLib('https://source.zoom.us/3.1.0/lib', '/av');
+        ZoomMtg.preLoadJSLibs();
+        ZoomMtg.prepareWebSDK();
+        ZoomMtg.i18n.load('ja-JP');
+
+        function startZoomLesson() {
             const btn = document.getElementById('join-btn');
             btn.disabled = true;
             btn.innerText = '接続中...';
 
             // 署名生成
-            const signature = ZoomMtg.generateSDKSignature({
-                meetingNumber: MEET_ID,
+            ZoomMtg.generateSDKSignature({
+                meetingNumber: ZOOM_MEETING_NUMBER,
                 sdkKey: SDK_KEY,
                 sdkSecret: SDK_SECRET,
                 role: 0,
                 success: function (res) {
-                    startMeeting(res.result);
+                    executeZoomJoin(res.result);
                 },
                 error: function (err) {
-                    console.error('Signature Error:', err);
-                    alert('接続エラーが発生しました。時間を置いて再度お試しください。');
+                    console.error('Signature error:', err);
+                    alert('接続準備に失敗しました。');
                     btn.disabled = false;
                     btn.innerText = 'レッスンに参加する';
                 }
             });
         }
 
-        function startMeeting(signature) {
-            const zoomRoot = document.getElementById('zmmtg-root');
-            
+        function executeZoomJoin(signature) {
             ZoomMtg.init({
                 leaveUrl: window.location.href,
                 disableCORP: !1,
                 success: function() {
-                    // 成功したタイミングでZoom画面を表示領域にする（真っ黒フリーズ防止）
-                    if (zoomRoot) zoomRoot.style.display = 'block';
+                    // SDKの初期化成功後に領域を表示（黒画面フリーズ防止）
+                    document.getElementById('zmmtg-root').style.display = 'block';
 
                     ZoomMtg.join({
                         signature: signature,
                         sdkKey: SDK_KEY,
-                        meetingNumber: MEET_ID,
-                        userName: '受講生',
-                        passCode: PASS_CODE,
+                        meetingNumber: ZOOM_MEETING_NUMBER,
+                        userName: userNameToUse,
+                        passCode: ZOOM_PASSCODE, // パスコードを自動セット
                         error: function(res) {
-                            console.error('Join Error:', res);
-                            alert('入室に失敗しました。');
-                            if (zoomRoot) zoomRoot.style.display = 'none';
+                            console.error('Join error:', res);
+                            alert('接続に失敗しました。');
+                            document.getElementById('zmmtg-root').style.display = 'none';
                             const btn = document.getElementById('join-btn');
                             btn.disabled = false;
                             btn.innerText = 'レッスンに参加する';
@@ -191,14 +199,18 @@
                     });
                 },
                 error: function(res) {
-                    console.error('Init Error:', res);
-                    alert('画面の初期化に失敗しました。');
+                    console.error('Init error:', res);
+                    alert('初期化エラーが発生しました。');
                     const btn = document.getElementById('join-btn');
                     btn.disabled = false;
                     btn.innerText = 'レッスンに参加する';
                 }
             });
         }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            getUserInfo();
+        });
     </script>
 </body>
 </html>
