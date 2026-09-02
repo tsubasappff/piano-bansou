@@ -17,15 +17,28 @@
     <script src="https://source.zoom.us/3.10.0/zoom-meeting-3.10.0.min.js"></script>
 
     <style>
-        /* Androidの動的バーに対応した全画面高さ制御 */
-        .zoom-container {
-            width: 100vw;
-            height: calc(100dvh - 120px); /* ヘッダー・操作パネル分の高さを引く */
-            min-height: 450px;
+        /* スマホ画面内にピッタリ収めるためのCSS強制上書き */
+        .zoom-wrapper {
+            width: 100%;
+            height: calc(100dvh - 120px);
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
         }
-        /* Android Chromeでの表示崩れ防止 */
+
+        /* Zoom SDKが動的に生成する要素を親要素いっぱいに拡大・収める */
+        #meetingSDKElement, 
+        #meetingSDKElement > div, 
+        #meetingSDKElement iframe,
+        .meeting-app,
         #zmmtg-root {
-            display: none !important;
+            width: 100% !important;
+            height: 100% !important;
+            position: absolute !important;
+            top: 0 !important;
+            left: 0 !important;
+            margin: 0 !important;
+            padding: 0 !important;
         }
     </style>
 </head>
@@ -40,10 +53,10 @@
     </header>
 
     <!-- メインコンテンツ -->
-    <main class="max-w-4xl w-full mx-auto p-2 sm:p-4 flex-1 flex flex-col gap-3">
+    <main class="max-w-4xl w-full mx-auto p-2 sm:p-4 flex-1 flex flex-col gap-2">
 
         <!-- ユーザー情報 兼 接続エリア -->
-        <div id="controlPanel" class="bg-slate-800 p-4 rounded-xl border border-slate-700 space-y-3 shrink-0">
+        <div id="controlPanel" class="bg-slate-800 p-3 rounded-xl border border-slate-700 space-y-2 shrink-0">
             <div class="flex justify-between items-center text-xs">
                 <span class="text-slate-400 font-bold">ログイン：<span id="userEmail" class="text-slate-200">読み込み中...</span></span>
                 <span class="inline-flex items-center gap-1.5 bg-emerald-950 text-emerald-400 text-[10px] px-2.5 py-0.5 rounded-full font-bold border border-emerald-800">
@@ -57,8 +70,10 @@
             </button>
         </div>
 
-        <!-- Zoom埋め込みコンテナ（Android画面ぴったりに合わせる設定） -->
-        <div id="meetingSDKElement" class="zoom-container bg-black rounded-xl overflow-hidden hidden shadow-2xl border border-slate-800 relative"></div>
+        <!-- Zoom埋め込みコンテナ -->
+        <div id="zoomContainer" class="zoom-wrapper rounded-xl overflow-hidden hidden shadow-2xl border border-slate-800">
+            <div id="meetingSDKElement"></div>
+        </div>
 
     </main>
 
@@ -93,14 +108,13 @@
             window.location.href = 'login.html';
         }
 
-        // Android向け：カメラ・マイクのブラウザ権限要求
+        // カメラ・マイク事前許可リクエスト
         async function requestMediaPermissions() {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-                // 一度権限を取ったらストリームを停止してZoomに渡す
                 stream.getTracks().forEach(track => track.stop());
             } catch (err) {
-                console.warn('カメラ・マイクの事前許可に失敗しました:', err);
+                console.warn('メディア許可エラー:', err);
             }
         }
 
@@ -108,17 +122,17 @@
         async function joinZoomRoom() {
             const client = ZoomMtgEmbedded.createClient();
             const meetingSDKElement = document.getElementById('meetingSDKElement');
+            const zoomContainer = document.getElementById('zoomContainer');
             const btn = document.getElementById('startZoomBtn');
             const controlPanel = document.getElementById('controlPanel');
 
             btn.disabled = true;
             btn.innerText = 'カメラ・マイク準備中...';
 
-            // Android向けに事前にアクセス権限をリクエスト
             await requestMediaPermissions();
 
             btn.innerText = '接続準備中...';
-            meetingSDKElement.classList.remove('hidden');
+            zoomContainer.classList.remove('hidden');
 
             try {
                 const response = await fetch(`${SUPABASE_URL}/functions/v1/generate-zoom-signature`, {
@@ -143,12 +157,7 @@
 
                 await client.init({
                     zoomAppRoot: meetingSDKElement,
-                    language: 'ja-JP',
-                    customize: {
-                        video: {
-                            isFullWidth: true
-                        }
-                    }
+                    language: 'ja-JP'
                 });
 
                 btn.innerText = '接続中...';
@@ -162,9 +171,8 @@
                     userEmail: currentUserEmail
                 });
 
-                // 接続成功後は上の接続パネルを小さくして画面を最大利用
-                controlPanel.classList.add('py-2');
-                btn.classList.add('hidden');
+                // 接続成功後は上のボタンを隠して全体を表示させる
+                controlPanel.classList.add('hidden');
 
             } catch (error) {
                 alert('Zoom接続エラー: ' + error.message);
