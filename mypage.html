@@ -52,7 +52,7 @@
                     <p class="text-xs text-stone-500 mt-1">時間になりましたら下のボタンを押してご入室ください</p>
                 </div>
                 
-                <a href="https://meet.google.com" target="_blank" rel="noopener noreferrer" 
+                <a href="lesson-room.html" 
                     class="inline-flex items-center justify-center gap-2 w-full bg-stone-800 hover:bg-stone-700 text-amber-50 font-medium py-4 rounded-xl transition shadow-md text-sm">
                     <span>レッスンルームに入る</span>
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -70,4 +70,40 @@
                         レッスン時間前になりましたら楽譜と鍵盤の準備をしてお待ちください。
                     </p>
                 </div>
-                <div class="p-4 rounded-xl bg-
+                <div class="p-4 rounded-xl bg-stone-50/80 border border-stone-200/60 space-y-1">
+                    <div class="text-xs font-bold text-stone-700 flex items-center gap-1">
+                        💬 サポート・お問い合わせ
+                    </div>
+                    <p class="text-[11px] text-stone-500 leading-relaxed">
+                        ご不明点や接続トラブルがございましたら、サポート窓口までご連絡ください。
+                    </p>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        async function checkUser() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = 'login.html';
+            } else {
+                document.getElementById('userEmail').innerText = session.user.email;
+            }
+        }
+
+        async function handleLogout() {
+            await supabaseClient.auth.signOut();
+            window.location.href = 'index.html';
+        }
+
+        checkUser();
+    </script>
+</body>
+</html>
