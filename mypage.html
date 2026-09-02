@@ -7,13 +7,14 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Zoom Web SDK (Component View) -->
-    <script src="https://source.zoom.us/3.1.0/lib/vendor/react.min.js"></script>
-    <script src="https://source.zoom.us/3.1.0/lib/vendor/react-dom.min.js"></script>
-    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux.min.js"></script>
-    <script src="https://source.zoom.us/3.1.0/lib/vendor/redux-thunk.min.js"></script>
-    <script src="https://source.zoom.us/3.1.0/lib/vendor/lodash.min.js"></script>
-    <script src="https://source.zoom.us/zoom-meeting-embedded-3.1.0.min.js"></script>
+    <!-- Zoom Web SDK (最新安定版に更新) -->
+    <script src="https://source.zoom.us/3.10.0/lib/vendor/react.min.js"></script>
+    <script src="https://source.zoom.us/3.10.0/lib/vendor/react-dom.min.js"></script>
+    <script src="https://source.zoom.us/3.10.0/lib/vendor/redux.min.js"></script>
+    <script src="https://source.zoom.us/3.10.0/lib/vendor/redux-thunk.min.js"></script>
+    <script src="https://source.zoom.us/3.10.0/lib/vendor/lodash.min.js"></script>
+    <script src="https://source.zoom.us/zoom-meeting-embedded-3.10.0.min.js"></script>
+    
     <!-- HMAC-SHA256 生成用ライブラリ -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 </head>
@@ -63,7 +64,7 @@
         const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
         const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-        // Zoom設定（ご提示いただいたクレデンシャル）
+        // Zoom設定
         const ZOOM_CLIENT_ID = '_EER_MwpSIOV2bEDxTjhg';
         const ZOOM_CLIENT_SECRET = '744pyYKpsrii4z5I23uMM51h3B7DL7I3';
         const MEETING_NUMBER = '6538746410';
@@ -90,7 +91,7 @@
             window.location.href = 'login.html';
         }
 
-        // Web SDK用 Signature 生成関数
+        // Signature 生成関数
         function generateSignature(sdkKey, sdkSecret, meetingNumber, role) {
             const iat = Math.round(new Date().getTime() / 1000) - 30;
             const exp = iat + 60 * 60 * 2;
