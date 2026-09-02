@@ -7,7 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     
-    <!-- Zoom Web SDK (最新安定版に更新) -->
+    <!-- Zoom Web SDK 3.10.0 -->
     <script src="https://source.zoom.us/3.10.0/lib/vendor/react.min.js"></script>
     <script src="https://source.zoom.us/3.10.0/lib/vendor/react-dom.min.js"></script>
     <script src="https://source.zoom.us/3.10.0/lib/vendor/redux.min.js"></script>
@@ -91,30 +91,31 @@
             window.location.href = 'login.html';
         }
 
-        // Signature 生成関数
+        // 最新の公式標準形式に準拠した Signature 生成関数
         function generateSignature(sdkKey, sdkSecret, meetingNumber, role) {
-            const iat = Math.round(new Date().getTime() / 1000) - 30;
+            const iat = Math.floor(Date.now() / 1000) - 30;
             const exp = iat + 60 * 60 * 2;
             const oHeader = { alg: 'HS256', typ: 'JWT' };
+            
             const oPayload = {
                 sdkKey: sdkKey,
+                appKey: sdkKey,
                 mn: meetingNumber,
                 role: role,
                 iat: iat,
                 exp: exp,
-                appKey: sdkKey,
                 tokenExp: exp
             };
 
-            const sHeader = JSON.stringify(oHeader);
-            const sPayload = JSON.stringify(oPayload);
-
-            const base64UrlHeader = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(sHeader)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
-            const base64UrlPayload = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(sPayload)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+            const base64UrlHeader = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify(oHeader)))
+                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+            const base64UrlPayload = CryptoJS.enc.Base64.stringify(CryptoJS.enc.Utf8.parse(JSON.stringify(oPayload)))
+                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
             const signatureInput = base64UrlHeader + "." + base64UrlPayload;
             const signature = CryptoJS.HmacSHA256(signatureInput, sdkSecret);
-            const base64UrlSignature = CryptoJS.enc.Base64.stringify(signature).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
+            const base64UrlSignature = CryptoJS.enc.Base64.stringify(signature)
+                .replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_');
 
             return signatureInput + "." + base64UrlSignature;
         }
@@ -130,6 +131,7 @@
             meetingSDKElement.classList.remove('hidden');
 
             try {
+                // role: 0 (参加者) で生成
                 const signature = generateSignature(ZOOM_CLIENT_ID, ZOOM_CLIENT_SECRET, MEETING_NUMBER, 0);
 
                 await client.init({
