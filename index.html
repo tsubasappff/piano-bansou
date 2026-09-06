@@ -3,63 +3,372 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ピアノ練習伴走 Lab</title>
+
+    <title>ピアノ練習伴走 | 「練習しなさい！」を、もう言わなくていい。</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
 
     <style>
         body {
             font-family: 'Noto Sans JP', sans-serif;
-            background-color: #fcfbf9;
-            color: #4a423d;
+            color: #403a36;
+            background: #fbfaf7;
         }
-        .serif-title {
+
+        .serif {
             font-family: 'Marcellus', serif;
         }
     </style>
 </head>
-<body class="min-h-screen flex flex-col justify-between p-4 sm:p-6 bg-gradient-to-b from-amber-50/60 via-stone-50 to-amber-100/30">
 
-    <!-- ヘッダー -->
-    <header class="max-w-md w-full mx-auto flex items-center justify-between py-2">
-        <span class="text-xs font-bold tracking-wider text-stone-500 uppercase serif-title">PIANO LAB</span>
-        <a href="login.html" class="text-xs font-medium text-stone-600 hover:text-amber-900 border border-stone-200/80 rounded-full px-3.5 py-1.5 bg-white/80 shadow-sm transition">
-            ログイン
-        </a>
-    </header>
+<body>
 
-    <!-- メインコンテンツ -->
-    <main class="max-w-md w-full mx-auto bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-stone-200/80 shadow-xl shadow-stone-200/50 space-y-6 my-auto">
-        
-        <div class="space-y-3 text-center">
-            <div class="inline-block px-3.5 py-1 bg-amber-100/70 text-amber-900/80 rounded-full text-[11px] font-medium tracking-wider mb-1">
-                WELCOME
+<!-- =========================
+     HEADER
+========================= -->
+
+<header class="max-w-6xl mx-auto px-5 sm:px-8 py-5 flex items-center justify-between">
+
+    <div class="flex items-center gap-2">
+        <span class="text-xl">🎹</span>
+
+        <span class="serif tracking-wide text-stone-700">
+            PIANO BANSOU
+        </span>
+    </div>
+
+    <a
+        href="login.html"
+        class="text-sm text-stone-600 border border-stone-200 bg-white rounded-full px-4 py-2"
+    >
+        ログイン
+    </a>
+
+</header>
+
+
+<main>
+
+<!-- =========================
+     HERO
+========================= -->
+
+<section class="max-w-6xl mx-auto px-5 sm:px-8 pt-12 pb-20 sm:pt-20 sm:pb-24">
+
+    <div class="max-w-3xl mx-auto text-center">
+
+        <p
+            class="inline-flex px-4 py-2 rounded-full bg-amber-100 text-amber-900 text-xs font-bold"
+        >
+            ピアノを続けたい子どもと、練習を支えるお母さんへ
+        </p>
+
+
+        <h1
+            class="mt-7 text-4xl sm:text-6xl font-semibold tracking-tight leading-tight text-stone-800"
+        >
+            「ピアノ練習して！」を、<br>
+
+            <span class="text-amber-800">
+                もう言わなくていい。
+            </span>
+        </h1>
+
+
+        <p
+            class="mt-7 text-base sm:text-lg leading-8 text-stone-600"
+        >
+            おうちの練習を、音大生が一緒にサポート。<br>
+
+            ピアノの先生から出された宿題に、
+            お子さまが取り組めるよう伴走します。
+        </p>
+
+
+        <div class="mt-9 flex flex-col sm:flex-row gap-3 justify-center">
+
+            <a
+                href="signup.html"
+                class="bg-stone-800 text-white font-bold px-8 py-4 rounded-2xl shadow-lg"
+            >
+                まずは練習をはじめる
+            </a>
+
+            <a
+                href="#about"
+                class="bg-white border border-stone-200 text-stone-700 font-medium px-8 py-4 rounded-2xl"
+            >
+                どんなサービス？
+            </a>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     PROBLEM
+========================= -->
+
+<section class="bg-white border-y border-stone-100">
+
+    <div class="max-w-5xl mx-auto px-5 sm:px-8 py-14 sm:py-20">
+
+        <p class="text-center text-sm font-bold text-amber-800">
+            こんなこと、ありませんか？
+        </p>
+
+
+        <div class="mt-8 grid sm:grid-cols-3 gap-4">
+
+
+            <!-- 01 -->
+
+            <div class="rounded-3xl bg-amber-50 p-6">
+
+                <div class="text-2xl">
+                    😮‍💨
+                </div>
+
+                <p class="mt-4 font-bold text-stone-800">
+                    「練習しなさい」が
+                    毎日の声かけになる
+                </p>
+
+                <p class="mt-2 text-sm leading-6 text-stone-600">
+                    言いたくないのに、
+                    言わないと練習しない。
+                </p>
+
             </div>
-            <h1 class="text-2xl sm:text-3xl font-normal text-stone-800 leading-tight">
-                毎日のピアノ練習を、<br>もっと無理なく習慣に。
-            </h1>
-            <p class="text-stone-500 text-xs leading-relaxed pt-1">
-                「練習しなさい」と言わなくても自発的に向かえるように。<br>お子さまの練習記録と声かけをサポートする伴走ツールです。
+
+
+            <!-- 02 -->
+
+            <div class="rounded-3xl bg-stone-50 p-6">
+
+                <div class="text-2xl">
+                    😣
+                </div>
+
+                <p class="mt-4 font-bold text-stone-800">
+                    練習させようとすると
+                    親子でケンカ
+                </p>
+
+                <p class="mt-2 text-sm leading-6 text-stone-600">
+                    本当はピアノを嫌いに
+                    なってほしくない。
+                </p>
+
+            </div>
+
+
+            <!-- 03 -->
+
+            <div class="rounded-3xl bg-amber-50 p-6">
+
+                <div class="text-2xl">
+                    🎹
+                </div>
+
+                <p class="mt-4 font-bold text-stone-800">
+                    このままだと
+                    続かない気がする
+                </p>
+
+                <p class="mt-2 text-sm leading-6 text-stone-600">
+                    先生のレッスンは好き。
+                    でも家での練習が難しい。
+                </p>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     ABOUT
+========================= -->
+
+<section
+    id="about"
+    class="max-w-5xl mx-auto px-5 sm:px-8 py-16 sm:py-24"
+>
+
+    <div class="max-w-2xl mx-auto text-center">
+
+        <p class="text-sm font-bold text-amber-800">
+            PIANO BANSOU
+        </p>
+
+
+        <h2
+            class="mt-3 text-3xl sm:text-4xl font-semibold text-stone-800"
+        >
+            「教える」のではなく、<br>
+            「一緒にやる」。
+        </h2>
+
+
+        <p
+            class="mt-6 text-stone-600 leading-8"
+        >
+            ピアノの先生に代わるサービスではありません。
+
+            先生から出された練習を、
+            お子さまが家で進められるよう、
+            音大生がそばで伴走します。
+        </p>
+
+    </div>
+
+
+    <!-- STEPS -->
+
+    <div class="mt-12 grid sm:grid-cols-3 gap-5">
+
+
+        <!-- STEP 1 -->
+
+        <div
+            class="bg-white rounded-3xl p-7 border border-stone-200 shadow-sm"
+        >
+
+            <div class="text-3xl">
+                ①
+            </div>
+
+            <h3 class="mt-5 font-bold text-lg">
+                今日の練習を確認
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-stone-500">
+                先生から出された宿題に
+                取り組む準備をします。
             </p>
+
         </div>
 
-        <div class="space-y-3 pt-2">
-            <a href="signup.html" class="block w-full text-center bg-stone-800 hover:bg-stone-700 text-amber-50 font-medium py-3.5 rounded-xl transition shadow-md text-sm">
-                新規アカウント登録
-            </a>
-            <a href="login.html" class="block w-full text-center bg-amber-50/80 hover:bg-amber-100/80 text-amber-900 font-medium py-3 rounded-xl transition text-sm border border-amber-200/60">
-                ログインはこちら
-            </a>
+
+        <!-- STEP 2 -->
+
+        <div
+            class="bg-white rounded-3xl p-7 border border-stone-200 shadow-sm"
+        >
+
+            <div class="text-3xl">
+                ②
+            </div>
+
+            <h3 class="mt-5 font-bold text-lg">
+                音大生と20分
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-stone-500">
+                「一緒にやろう」で、
+                練習を始めるきっかけをつくります。
+            </p>
+
         </div>
 
-    </main>
 
-    <!-- フッター -->
-    <footer class="text-center py-4 text-xs text-stone-400">
-        &copy; ピアノ練習伴走 Lab
-    </footer>
+        <!-- STEP 3 -->
+
+        <div
+            class="bg-white rounded-3xl p-7 border border-stone-200 shadow-sm"
+        >
+
+            <div class="text-3xl">
+                ③
+            </div>
+
+            <h3 class="mt-5 font-bold text-lg">
+                できた！で終わる
+            </h3>
+
+            <p class="mt-2 text-sm leading-6 text-stone-500">
+                小さな達成感を積み重ね、
+                練習を習慣にしていきます。
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- =========================
+     FINAL CTA
+========================= -->
+
+<section class="bg-stone-800 text-white">
+
+    <div
+        class="max-w-4xl mx-auto px-5 sm:px-8 py-16 sm:py-20 text-center"
+    >
+
+        <p class="text-amber-300 font-bold text-sm">
+            親子の時間を、もっとやさしく。
+        </p>
+
+
+        <h2
+            class="mt-4 text-3xl sm:text-4xl font-semibold leading-tight"
+        >
+            「練習しなさい」の代わりに、<br>
+            「いってらっしゃい」が言えるように。
+        </h2>
+
+
+        <p
+            class="mt-5 text-stone-300 leading-7"
+        >
+            子どもの成長も、お母さんの笑顔も。<br>
+            どちらも大切にする
+            ピアノ練習の伴走サービスです。
+        </p>
+
+
+        <a
+            href="signup.html"
+            class="inline-block mt-8 bg-amber-500 text-stone-950 font-bold px-8 py-4 rounded-2xl"
+        >
+            ピアノ練習をはじめる
+        </a>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<!-- =========================
+     FOOTER
+========================= -->
+
+<footer class="text-center py-8 text-xs text-stone-400">
+
+    &copy; ピアノ練習伴走 Lab
+
+</footer>
+
 
 </body>
 </html>
