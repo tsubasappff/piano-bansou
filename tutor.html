@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>先生用 | PIANO BANSOU</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://meet.jit.si/external_api.js"></script>
+
+    <style>
+        body {
+            font-family: sans-serif;
+            background: #1c1917;
+            color: #f5f5f4;
+        }
+
+        #video-container {
+            display: none;
+            position: fixed;
+            inset: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 99999;
+        }
+    </style>
+</head>
+
+
+<body class="min-h-screen">
+
+    <!-- JITSI -->
+    <div id="video-container"></div>
+
+
+    <!-- MAIN -->
+    <div id="main-ui">
+
+        <header class="p-4 bg-stone-900 border-b border-stone-800">
+            <div class="max-w-md mx-auto flex justify-between items-center">
+
+                <div class="font-bold">
+                    🎹 PIANO BANSOU
+                </div>
+
+                <a
+                    href="mypage.html"
+                    class="text-xs text-stone-400 border border-stone-700 px-3 py-2 rounded-lg"
+                >
+                    戻る
+                </a>
+
+            </div>
+        </header>
+
+
+        <main class="max-w-md mx-auto p-5">
+
+            <div class="mt-8 bg-stone-800 rounded-3xl p-7">
+
+                <div class="text-center">
+
+                    <div class="text-5xl">
+                        🎹
+                    </div>
+
+                    <h1 class="mt-5 text-2xl font-bold">
+                        先生用
+                    </h1>
+
+                    <p class="mt-3 text-sm text-stone-400 leading-6">
+                        練習を始めると、<br>
+                        お子さまの画面に入室ボタンが表示されます。
+                    </p>
+
+                </div>
+
+
+                <!-- STATUS -->
+
+                <div
+                    id="status"
+                    class="mt-7 bg-stone-900 border border-stone-700 rounded-2xl p-5 text-center"
+                >
+                    <p class="text-sm text-stone-400">
+                        練習を開始できます
+                    </p>
+                </div>
+
+
+                <!-- START -->
+
+                <button
+                    id="start-button"
+                    onclick="startPractice()"
+                    class="mt-6 w-full bg-amber-500 text-stone-950 font-bold py-4 rounded-2xl active:scale-95"
+                >
+                    🎹 練習を開始する
+                </button>
+
+
+                <!-- END -->
+
+                <button
+                    id="end-button"
+                    onclick="endPractice()"
+                    class="hidden mt-4 w-full bg-stone-700 text-white font-bold py-4 rounded-2xl"
+                >
+                    練習を終了する
+                </button>
+
+            </div>
+
+        </main>
+
+    </div>
+
+
+<script>
+
+/* =========================================
+   SUPABASE
+========================================= */
+
+const SUPABASE_URL =
+    'https://flzguqgdgltwzuxudolg.supabase.co';
+
+const SUPABASE_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+/* =========================================
+   STATE
+========================================= */
+
+let currentUser = null;
+let currentSession = null;
+let jitsiApi = null;
+
+
+/* =========================================
+   LOGIN CHECK
+========================================= */
+
+async function loadUser() {
+
+    const {
+        data: {
+            session
+        }
+    } = await supabaseClient.auth.getSession();
+
+
+    if (!session) {
+
+        window.location.href =
+            'login.html';
+
+        return false;
+
+    }
+
+
+    currentUser = session.user;
+
+    return true;
+
+}
+
+
+/* =========================================
+   START PRACTICE
+========================================= */
+
+async function startPractice() {
+
+    if (!currentUser) {
+        return;
+    }
+
+
+    const button =
+        document.getElementById('start-button');
+
+    const status =
+        document.getElementById('status');
+
+
+    button.disabled = true;
+
+    button.innerText =
+        '準備しています…';
+
+
+    /*
+     * 今回はテスト用として、
+     * ログインしているユーザーを
+     * お子さまとしてセッションを作ります。
+     *
+     * 次の段階で
+     * 「先生アカウント → 子どもを選択」
+     * に変更します。
+     */
+
+
+    const roomName =
+        'piano-bansou-' +
+        crypto.randomUUID();
+
+
+    const {
+        data,
+        error
+    } = await supabaseClient
+        .from('practice_sessions')
+        .insert({
+
+            child_id:
+                currentUser.id,
+
+            tutor_id:
+                currentUser.id,
+
+            status:
+                'active',
+
+            room_name:
+                roomName,
+
+            started_at:
+                new Date().toISOString()
+
+        })
+        .select()
+        .single();
+
+
+    if (error) {
+
+        console.error(error);
+
+        status.innerHTML = `
+            <p class="text-red-400 font-bold">
+                エラーが発生しました
+            </p>
+
+            <p class="mt-2 text-xs text-stone-500">
+                ${error.message}
+            </p>
+        `;
+
+        button.disabled = false;
+
+        button.innerText =
+            '🎹 練習を開始する';
+
+        return;
+
+    }
+
+
+    currentSession = data;
+
+
+    status.innerHTML = `
+        <p class="text-green-400 font-bold">
+            ● 練習中
+        </p>
+
+        <p class="mt-2 text-xs text-stone-500">
+            お子さまが入室できる状態です
+        </p>
+    `;
+
+
+    button.classList.add('hidden');
+
+    document
+        .getElementById('end-button')
+        .classList.remove('hidden');
+
+
+    /*
+     * 先生側もJitsiへ入室
+     */
+
+    joinRoom();
+
+}
+
+
+/* =========================================
+   JOIN JITSI
+========================================= */
+
+function joinRoom() {
+
+    if (!currentSession) {
+        return;
+    }
+
+
+    const container =
+        document.getElementById('video-container');
+
+
+    container.style.display =
+        'block';
+
+
+    document.getElementById('main-ui').style.display =
+        'none';
+
+
+    const options = {
+
+        roomName:
+            currentSession.room_name,
+
+        width: '100%',
+
+        height: '100%',
+
+        parentNode:
+            container,
+
+        userInfo: {
+
+            displayName:
+                '音大生サポーター'
+
+        },
+
+        configOverwrite: {
+
+            disableDeepLinking: true,
+
+            startWithAudioMuted: false,
+
+            startWithVideoMuted: false
+
+        },
+
+        interfaceConfigOverwrite: {
+
+            SHOW_JITSI_WATERMARK: false,
+
+            MOBILE_APP_PROMO: false
+
+        }
+
+    };
+
+
+    jitsiApi =
+        new JitsiMeetExternalAPI(
+            'meet.jit.si',
+            options
+        );
+
+
+    jitsiApi.addEventListener(
+        'videoConferenceLeft',
+        () => {
+
+            container.style.display =
+                'none';
+
+            container.innerHTML =
+                '';
+
+            document.getElementById('main-ui').style.display =
+                'block';
+
+        }
+    );
+
+}
+
+
+/* =========================================
+   END PRACTICE
+========================================= */
+
+async function endPractice() {
+
+    if (!currentSession) {
+        return;
+    }
+
+
+    const {
+        error
+    } = await supabaseClient
+        .from('practice_sessions')
+        .update({
+
+            status:
+                'ended',
+
+            ended_at:
+                new Date().toISOString()
+
+        })
+        .eq(
+            'id',
+            currentSession.id
+        );
+
+
+    if (error) {
+
+        alert(
+            '終了処理に失敗しました'
+        );
+
+        return;
+
+    }
+
+
+    if (jitsiApi) {
+
+        jitsiApi.dispose();
+
+        jitsiApi = null;
+
+    }
+
+
+    document.getElementById('video-container').style.display =
+        'none';
+
+    document.getElementById('video-container').innerHTML =
+        '';
+
+    document.getElementById('main-ui').style.display =
+        'block';
+
+
+    document.getElementById('status').innerHTML = `
+        <p class="text-stone-400 font-bold">
+            練習終了
+        </p>
+    `;
+
+
+    document.getElementById('end-button')
+        .classList.add('hidden');
+
+}
+
+
+/* =========================================
+   START
+========================================= */
+
+async function start() {
+
+    const loggedIn =
+        await loadUser();
+
+    if (!loggedIn) {
+        return;
+    }
+
+}
+
+
+start();
+
+</script>
+
+</body>
+</html>
