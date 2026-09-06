@@ -3,112 +3,395 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>マイページ - ピアノ練習伴走 Lab</title>
+
+    <title>今日の練習 | PIANO BANSOU</title>
+
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;700&display=swap" rel="stylesheet">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
+        rel="stylesheet"
+    >
 
     <style>
         body {
             font-family: 'Noto Sans JP', sans-serif;
-            background-color: #fcfbf9;
-            color: #4a423d;
+            background: #fbfaf7;
+            color: #403a36;
         }
-        .serif-title {
+
+        .serif {
             font-family: 'Marcellus', serif;
         }
     </style>
 </head>
-<body class="min-h-screen bg-gradient-to-b from-amber-50/60 via-stone-50 to-amber-100/30 p-4 sm:p-6">
 
-    <div class="max-w-2xl mx-auto space-y-6">
-        
-        <!-- ヘッダー -->
-        <div class="flex items-center justify-between bg-white/80 backdrop-blur-sm p-4 sm:p-5 rounded-2xl border border-stone-200/80 shadow-sm">
-            <div class="flex items-center gap-2">
-                <span class="text-xl">🎹</span>
-                <span class="font-normal text-stone-800 serif-title text-base sm:text-lg">ピアノ練習伴走 Lab</span>
-            </div>
-            <button onclick="handleLogout()" class="text-xs text-stone-500 hover:text-stone-800 transition px-3 py-1.5 rounded-lg border border-stone-200 hover:bg-stone-50">
-                ログアウト
-            </button>
+<body class="min-h-screen">
+
+<!-- HEADER -->
+
+<header class="bg-white border-b border-stone-100">
+
+    <div class="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
+
+        <div class="flex items-center gap-2">
+            <span class="text-xl">🎹</span>
+
+            <span class="serif tracking-wide text-stone-700">
+                PIANO BANSOU
+            </span>
         </div>
 
-        <!-- メインカード -->
-        <div class="bg-white/90 backdrop-blur-sm rounded-3xl p-6 sm:p-8 border border-stone-200/80 shadow-xl shadow-stone-200/50 space-y-6">
-            
-            <div class="space-y-1">
-                <div class="text-xs font-medium text-amber-800/80 tracking-wider">MEMBER PAGE</div>
-                <h1 class="text-xl sm:text-2xl font-bold text-stone-800">おかえりなさい</h1>
-                <p id="userEmail" class="text-xs text-stone-400">読み込み中...</p>
-            </div>
+        <button
+            onclick="handleLogout()"
+            class="text-xs text-stone-500 border border-stone-200 rounded-full px-4 py-2"
+        >
+            ログアウト
+        </button>
 
-            <!-- レッスンルーム入室エリア -->
-            <div class="bg-gradient-to-br from-amber-50 to-stone-50 p-6 rounded-2xl border border-amber-200/70 space-y-4 text-center">
-                <div class="inline-block px-3 py-1 bg-white text-amber-900 rounded-full text-xs font-bold shadow-sm">
-                    🎵 オンラインレッスン
-                </div>
+    </div>
+
+</header>
+
+
+<main class="max-w-3xl mx-auto px-5 py-8 sm:py-12">
+
+<!-- GREETING -->
+
+<section>
+
+    <p class="text-sm text-amber-800 font-bold">
+        TODAY
+    </p>
+
+    <h1
+        class="mt-2 text-2xl sm:text-3xl font-bold text-stone-800"
+    >
+        今日もピアノ、やってみよう 🎹
+    </h1>
+
+    <p
+        id="userEmail"
+        class="mt-2 text-xs text-stone-400"
+    >
+        読み込み中...
+    </p>
+
+</section>
+
+
+<!-- TODAY'S PRACTICE -->
+
+<section class="mt-8">
+
+    <div
+        class="bg-white rounded-3xl border border-stone-200 shadow-sm overflow-hidden"
+    >
+
+        <div class="p-6 sm:p-8">
+
+            <div class="flex items-center justify-between">
+
                 <div>
-                    <h2 class="text-lg font-bold text-stone-800">レッスンルーム</h2>
-                    <p class="text-xs text-stone-500 mt-1">時間になりましたら下のボタンを押してご入室ください</p>
+
+                    <span
+                        class="inline-block px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-bold"
+                    >
+                        今日の練習
+                    </span>
+
+                    <h2
+                        class="mt-4 text-xl font-bold text-stone-800"
+                    >
+                        ピアノの宿題
+                    </h2>
+
                 </div>
-                
-                <!-- lesson-room.html へ直接遷移 -->
-                <a href="lesson-room.html" 
-                    class="inline-flex items-center justify-center gap-2 w-full bg-stone-800 hover:bg-stone-700 text-amber-50 font-medium py-4 rounded-xl transition shadow-md text-sm">
-                    <span>レッスンルームに入る</span>
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                    </svg>
-                </a>
+
+                <div class="text-4xl">
+                    🎼
+                </div>
+
             </div>
 
-            <!-- 案内カード -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                <div class="p-4 rounded-xl bg-stone-50/80 border border-stone-200/60 space-y-1">
-                    <div class="text-xs font-bold text-stone-700 flex items-center gap-1">
-                        📋 ご利用の流れ
+
+            <!-- PRACTICE ITEMS -->
+
+            <div class="mt-6 space-y-3">
+
+                <div
+                    class="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl"
+                >
+
+                    <div
+                        class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm"
+                    >
+                        1
                     </div>
-                    <p class="text-[11px] text-stone-500 leading-relaxed">
-                        レッスン時間前になりましたら楽譜と鍵盤の準備をしてお待ちください。
-                    </p>
-                </div>
-                <div class="p-4 rounded-xl bg-stone-50/80 border border-stone-200/60 space-y-1">
-                    <div class="text-xs font-bold text-stone-700 flex items-center gap-1">
-                        💬 サポート・お問い合わせ
+
+                    <div>
+
+                        <p class="font-medium text-stone-800">
+                            今日の宿題を確認する
+                        </p>
+
+                        <p class="text-xs text-stone-400 mt-1">
+                            先生から出された練習を確認します
+                        </p>
+
                     </div>
-                    <p class="text-[11px] text-stone-500 leading-relaxed">
-                        ご不明点や接続トラブルがございましたら、サポート窓口までご連絡ください。
-                    </p>
+
                 </div>
+
+
+                <div
+                    class="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl"
+                >
+
+                    <div
+                        class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm"
+                    >
+                        2
+                    </div>
+
+                    <div>
+
+                        <p class="font-medium text-stone-800">
+                            ピアノを弾いてみる
+                        </p>
+
+                        <p class="text-xs text-stone-400 mt-1">
+                            音大生と一緒に練習します
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <div
+                    class="flex items-center gap-3 p-4 bg-stone-50 rounded-2xl"
+                >
+
+                    <div
+                        class="w-8 h-8 rounded-full bg-white border border-stone-200 flex items-center justify-center text-sm"
+                    >
+                        3
+                    </div>
+
+                    <div>
+
+                        <p class="font-medium text-stone-800">
+                            「できた！」で終わる
+                        </p>
+
+                        <p class="text-xs text-stone-400 mt-1">
+                            今日できたことを確認します
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- JOIN -->
+
+            <div
+                class="mt-7 pt-6 border-t border-stone-100"
+            >
+
+                <p
+                    class="text-center text-sm text-stone-500"
+                >
+                    音大生と一緒に練習しよう
+                </p>
+
+                <a
+                    href="lesson-room.html"
+                    class="mt-3 flex items-center justify-center gap-2 w-full bg-stone-800 hover:bg-stone-700 text-white font-bold py-4 rounded-2xl transition shadow-md"
+                >
+                    <span>一緒に練習する</span>
+
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        class="w-5 h-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                    >
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M14 5l7 7m0 0l-7 7m7-7H3"
+                        />
+                    </svg>
+
+                </a>
+
             </div>
 
         </div>
 
     </div>
 
-    <script>
-        const SUPABASE_URL = 'https://flzguqgdgltwzuxudolg.supabase.co';
-        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
-        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+</section>
 
-        async function checkUser() {
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (!session) {
-                window.location.href = 'login.html';
-            } else {
-                document.getElementById('userEmail').innerText = session.user.email;
-            }
-        }
 
-        async function handleLogout() {
-            await supabaseClient.auth.signOut();
-            window.location.href = 'index.html';
-        }
+<!-- PARENT MESSAGE -->
 
-        checkUser();
-    </script>
+<section
+    class="mt-6 bg-amber-50 rounded-3xl p-6 border border-amber-100"
+>
+
+    <div class="flex gap-4">
+
+        <div class="text-2xl">
+            🌱
+        </div>
+
+        <div>
+
+            <h3 class="font-bold text-stone-800">
+                おうちの方へ
+            </h3>
+
+            <p
+                class="mt-2 text-sm leading-7 text-stone-600"
+            >
+                今日の練習は、音大生と一緒に進めます。
+                まずはお子さまに
+                <span class="font-bold text-amber-900">
+                    「いってらっしゃい」
+                </span>
+                と声をかけてあげてください。
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+<!-- HOW IT WORKS -->
+
+<section class="mt-10">
+
+    <h2 class="font-bold text-stone-800">
+        PIANO BANSOUの使い方
+    </h2>
+
+
+    <div class="mt-4 grid grid-cols-3 gap-3">
+
+        <div class="text-center">
+
+            <div
+                class="w-12 h-12 mx-auto rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-xl"
+            >
+                📋
+            </div>
+
+            <p class="mt-2 text-xs text-stone-500">
+                今日の練習を<br>確認
+            </p>
+
+        </div>
+
+
+        <div class="text-center">
+
+            <div
+                class="w-12 h-12 mx-auto rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-xl"
+            >
+                🎹
+            </div>
+
+            <p class="mt-2 text-xs text-stone-500">
+                音大生と<br>一緒に練習
+            </p>
+
+        </div>
+
+
+        <div class="text-center">
+
+            <div
+                class="w-12 h-12 mx-auto rounded-2xl bg-white border border-stone-200 flex items-center justify-center text-xl"
+            >
+                ⭐
+            </div>
+
+            <p class="mt-2 text-xs text-stone-500">
+                できた！で<br>終わり
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+</main>
+
+
+<!-- SUPABASE -->
+
+<script>
+
+const SUPABASE_URL =
+    'https://flzguqgdgltwzuxudolg.supabase.co';
+
+const SUPABASE_KEY =
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+
+async function checkUser() {
+
+    const {
+        data: { session }
+    } = await supabaseClient.auth.getSession();
+
+
+    if (!session) {
+
+        window.location.href = 'login.html';
+
+        return;
+    }
+
+
+    document.getElementById('userEmail').innerText =
+        session.user.email;
+
+}
+
+
+async function handleLogout() {
+
+    await supabaseClient.auth.signOut();
+
+    window.location.href = 'index.html';
+
+}
+
+
+checkUser();
+
+</script>
+
 </body>
 </html>
