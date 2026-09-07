@@ -9,7 +9,7 @@
 
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://meet.jit.si/external_api.js"></script>
+    <script src="https://unpkg.com/@daily-co/daily-js"></script>
 
     <style>
         body {
@@ -30,14 +30,10 @@
     </style>
 </head>
 
-
 <body class="min-h-screen">
 
-    <!-- JITSI -->
     <div id="video-container"></div>
 
-
-    <!-- MAIN -->
     <div id="main-ui">
 
         <header class="p-4 bg-stone-900 border-b border-stone-800">
@@ -73,14 +69,12 @@
                     </h1>
 
                     <p class="mt-3 text-sm text-stone-400 leading-6">
-                        練習を始めると、<br>
-                        お子さまの画面に入室ボタンが表示されます。
+                        練習を開始すると、<br>
+                        お子さまが入室できるようになります。
                     </p>
 
                 </div>
 
-
-                <!-- STATUS -->
 
                 <div
                     id="status"
@@ -92,8 +86,6 @@
                 </div>
 
 
-                <!-- START -->
-
                 <button
                     id="start-button"
                     onclick="startPractice()"
@@ -102,8 +94,6 @@
                     🎹 練習を開始する
                 </button>
 
-
-                <!-- END -->
 
                 <button
                     id="end-button"
@@ -129,8 +119,20 @@
 const SUPABASE_URL =
     'https://flzguqgdgltwzuxudolg.supabase.co';
 
-const SUPABASE_KEY =
+
+/*
+ * ここだけ現在の tutor.html からコピー
+ *
+ * 今のファイルにある
+ *
+ * const SUPABASE_KEY = '...';
+ *
+ * の「...」の部分をそのまま入れてください。
+ */
+
+const SUPABASE_KEY = '
     'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
+
 
 const supabaseClient =
     window.supabase.createClient(
@@ -145,11 +147,11 @@ const supabaseClient =
 
 let currentUser = null;
 let currentSession = null;
-let jitsiApi = null;
+let callFrame = null;
 
 
 /* =========================================
-   LOGIN CHECK
+   LOGIN
 ========================================= */
 
 async function loadUser() {
@@ -167,14 +169,13 @@ async function loadUser() {
             'login.html';
 
         return false;
-
     }
 
 
-    currentUser = session.user;
+    currentUser =
+        session.user;
 
     return true;
-
 }
 
 
@@ -190,10 +191,14 @@ async function startPractice() {
 
 
     const button =
-        document.getElementById('start-button');
+        document.getElementById(
+            'start-button'
+        );
 
     const status =
-        document.getElementById('status');
+        document.getElementById(
+            'status'
+        );
 
 
     button.disabled = true;
@@ -202,52 +207,123 @@ async function startPractice() {
         '準備しています…';
 
 
-    /*
-     * 今回はテスト用として、
-     * ログインしているユーザーを
-     * お子さまとしてセッションを作ります。
-     *
-     * 次の段階で
-     * 「先生アカウント → 子どもを選択」
-     * に変更します。
-     */
+    try {
+
+        /*
+         * Supabase Edge Functionを呼び出す
+         *
+         * DailyのAPIキーはブラウザには存在しません。
+         */
+
+        const {
+            data,
+            error
+        } =
+            await supabaseClient.functions.invoke(
+                'create-daily-room',
+                {
+                    body: {}
+                }
+            );
 
 
-    const roomName =
-        'piano-bansou-' +
-        crypto.randomUUID();
+        if (error) {
+            throw error;
+        }
 
 
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from('practice_sessions')
-        .insert({
+        if (!data || !data.success) {
 
-            child_id:
-                currentUser.id,
+            throw new Error(
+                data?.error ||
+                'Dailyルームの作成に失敗しました'
+            );
 
-            tutor_id:
-                currentUser.id,
-
-            status:
-                'active',
-
-            room_name:
-                roomName,
-
-            started_at:
-                new Date().toISOString()
-
-        })
-        .select()
-        .single();
+        }
 
 
-    if (error) {
+        /*
+         * 練習セッションを作成
+         *
+         * 現段階はテスト用。
+         */
+
+        const {
+            data: sessionData,
+            error: sessionError
+        } =
+            await supabaseClient
+                .from('practice_sessions')
+                .insert({
+
+                    child_id:
+                        currentUser.id,
+
+                    tutor_id:
+                        currentUser.id,
+
+                    status:
+                        'active',
+
+                    room_name:
+                        data.room_name,
+
+                    started_at:
+                        new Date().toISOString()
+
+                })
+                .select()
+                .single();
+
+
+        if (sessionError) {
+            throw sessionError;
+        }
+
+
+        currentSession =
+            sessionData;
+
+
+        status.innerHTML = `
+            <p class="text-green-400 font-bold">
+                ● 練習中
+            </p>
+
+            <p class="mt-2 text-xs text-stone-500">
+                お子さまが入室できます
+            </p>
+        `;
+
+
+        button.classList.add(
+            'hidden'
+        );
+
+
+        document
+            .getElementById(
+                'end-button'
+            )
+            .classList.remove(
+                'hidden'
+            );
+
+
+        /*
+         * Dailyへ入室
+         */
+
+        await joinDaily(
+            data.room_url,
+            data.token
+        );
+
+
+    } catch (error) {
 
         console.error(error);
+
 
         status.innerHTML = `
             <p class="text-red-400 font-bold">
@@ -255,122 +331,74 @@ async function startPractice() {
             </p>
 
             <p class="mt-2 text-xs text-stone-500">
-                ${error.message}
+                ${escapeHtml(
+                    error.message ||
+                    'Unknown error'
+                )}
             </p>
         `;
 
-        button.disabled = false;
+
+        button.disabled =
+            false;
 
         button.innerText =
             '🎹 練習を開始する';
-
-        return;
-
     }
-
-
-    currentSession = data;
-
-
-    status.innerHTML = `
-        <p class="text-green-400 font-bold">
-            ● 練習中
-        </p>
-
-        <p class="mt-2 text-xs text-stone-500">
-            お子さまが入室できる状態です
-        </p>
-    `;
-
-
-    button.classList.add('hidden');
-
-    document
-        .getElementById('end-button')
-        .classList.remove('hidden');
-
-
-    /*
-     * 先生側もJitsiへ入室
-     */
-
-    joinRoom();
-
 }
 
 
 /* =========================================
-   JOIN JITSI
+   DAILY
 ========================================= */
 
-function joinRoom() {
-
-    if (!currentSession) {
-        return;
-    }
-
+async function joinDaily(
+    roomUrl,
+    token
+) {
 
     const container =
-        document.getElementById('video-container');
+        document.getElementById(
+            'video-container'
+        );
 
 
     container.style.display =
         'block';
 
 
-    document.getElementById('main-ui').style.display =
+    document.getElementById(
+        'main-ui'
+    ).style.display =
         'none';
 
 
-    const options = {
-
-        roomName:
-            currentSession.room_name,
-
-        width: '100%',
-
-        height: '100%',
-
-        parentNode:
+    callFrame =
+        DailyIframe.createFrame(
             container,
+            {
 
-        userInfo: {
+                showLeaveButton:
+                    true,
 
-            displayName:
-                '音大生サポーター'
+                iframeStyle: {
 
-        },
+                    width:
+                        '100%',
 
-        configOverwrite: {
+                    height:
+                        '100%',
 
-            disableDeepLinking: true,
+                    border:
+                        '0'
+                }
 
-            startWithAudioMuted: false,
-
-            startWithVideoMuted: false
-
-        },
-
-        interfaceConfigOverwrite: {
-
-            SHOW_JITSI_WATERMARK: false,
-
-            MOBILE_APP_PROMO: false
-
-        }
-
-    };
-
-
-    jitsiApi =
-        new JitsiMeetExternalAPI(
-            'meet.jit.si',
-            options
+            }
         );
 
 
-    jitsiApi.addEventListener(
-        'videoConferenceLeft',
+    callFrame.on(
+        'left-meeting',
         () => {
 
             container.style.display =
@@ -379,17 +407,32 @@ function joinRoom() {
             container.innerHTML =
                 '';
 
-            document.getElementById('main-ui').style.display =
+            document.getElementById(
+                'main-ui'
+            ).style.display =
                 'block';
 
         }
     );
 
+
+    await callFrame.join({
+
+        url:
+            roomUrl,
+
+        token:
+            token,
+
+        userName:
+            '音大生サポーター'
+
+    });
 }
 
 
 /* =========================================
-   END PRACTICE
+   END
 ========================================= */
 
 async function endPractice() {
@@ -401,21 +444,22 @@ async function endPractice() {
 
     const {
         error
-    } = await supabaseClient
-        .from('practice_sessions')
-        .update({
+    } =
+        await supabaseClient
+            .from('practice_sessions')
+            .update({
 
-            status:
-                'ended',
+                status:
+                    'ended',
 
-            ended_at:
-                new Date().toISOString()
+                ended_at:
+                    new Date().toISOString()
 
-        })
-        .eq(
-            'id',
-            currentSession.id
-        );
+            })
+            .eq(
+                'id',
+                currentSession.id
+            );
 
 
     if (error) {
@@ -425,39 +469,120 @@ async function endPractice() {
         );
 
         return;
-
     }
 
 
-    if (jitsiApi) {
+    if (callFrame) {
 
-        jitsiApi.dispose();
+        try {
+            await callFrame.leave();
+        } catch (e) {
+            console.warn(e);
+        }
 
-        jitsiApi = null;
 
+        try {
+            callFrame.destroy();
+        } catch (e) {
+            console.warn(e);
+        }
+
+
+        callFrame =
+            null;
     }
 
 
-    document.getElementById('video-container').style.display =
+    document.getElementById(
+        'video-container'
+    ).style.display =
         'none';
 
-    document.getElementById('video-container').innerHTML =
+
+    document.getElementById(
+        'video-container'
+    ).innerHTML =
         '';
 
-    document.getElementById('main-ui').style.display =
+
+    document.getElementById(
+        'main-ui'
+    ).style.display =
         'block';
 
 
-    document.getElementById('status').innerHTML = `
+    document.getElementById(
+        'status'
+    ).innerHTML = `
         <p class="text-stone-400 font-bold">
             練習終了
         </p>
     `;
 
 
-    document.getElementById('end-button')
-        .classList.add('hidden');
+    document.getElementById(
+        'end-button'
+    ).classList.add(
+        'hidden'
+    );
 
+
+    document.getElementById(
+        'start-button'
+    ).classList.remove(
+        'hidden'
+    );
+
+
+    document.getElementById(
+        'start-button'
+    ).disabled =
+        false;
+
+
+    document.getElementById(
+        'start-button'
+    ).innerText =
+        '🎹 練習を開始する';
+
+
+    currentSession =
+        null;
+}
+
+
+/* =========================================
+   HTML ESCAPE
+========================================= */
+
+function escapeHtml(value) {
+
+    return String(value)
+
+        .replaceAll(
+            '&',
+            '&amp;'
+        )
+
+        .replaceAll(
+            '<',
+            '&lt;'
+        )
+
+        .replaceAll(
+            '>',
+            '&gt;'
+        )
+
+        .replaceAll(
+            '"',
+            '&quot;'
+        )
+
+        .replaceAll(
+            "'",
+            '&#039;'
+        );
 }
 
 
@@ -469,6 +594,7 @@ async function start() {
 
     const loggedIn =
         await loadUser();
+
 
     if (!loggedIn) {
         return;
