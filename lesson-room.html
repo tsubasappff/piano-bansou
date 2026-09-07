@@ -1,649 +1,402 @@
 <!DOCTYPE html>
 <html lang="ja">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>一緒に練習する｜ピアノ伴奏</title>
 
-    <meta charset="UTF-8">
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-    <meta
-        name="viewport"
-        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    >
+    body {
+      margin: 0;
+      font-family:
+        -apple-system,
+        BlinkMacSystemFont,
+        "Hiragino Kaku Gothic ProN",
+        "Yu Gothic",
+        sans-serif;
+      background: #f8f7f4;
+      color: #333;
+    }
 
-    <title>一緒に練習 | PIANO BANSOU</title>
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    .back {
+      display: inline-block;
+      margin-bottom: 28px;
+      color: #666;
+      text-decoration: none;
+      font-size: 14px;
+    }
 
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+    }
 
-    <script src="https://meet.jit.si/external_api.js"></script>
+    .icon {
+      font-size: 56px;
+      margin-bottom: 16px;
+    }
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
+    h1 {
+      margin: 0 0 12px;
+      font-size: 26px;
+      line-height: 1.5;
+    }
 
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    .message {
+      color: #666;
+      line-height: 1.8;
+      margin-bottom: 28px;
+    }
 
-    <link
-        href="https://fonts.googleapis.com/css2?family=Marcellus&family=Noto+Sans+JP:wght@400;500;600;700&display=swap"
-        rel="stylesheet"
-    >
+    .status {
+      background: #f5f3ef;
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 24px;
+      font-size: 15px;
+      line-height: 1.7;
+    }
 
-    <style>
+    .status strong {
+      display: block;
+      font-size: 17px;
+      margin-bottom: 4px;
+    }
 
-        body {
-            font-family: 'Noto Sans JP', sans-serif;
-            background: #1c1917;
-            color: #f5f5f4;
-            touch-action: manipulation;
-        }
+    button {
+      width: 100%;
+      border: none;
+      border-radius: 14px;
+      padding: 17px 20px;
+      font-size: 17px;
+      font-weight: bold;
+      cursor: pointer;
+      background: #333;
+      color: white;
+    }
 
-        .serif {
-            font-family: 'Marcellus', serif;
-        }
+    button:disabled {
+      background: #ccc;
+      cursor: default;
+    }
 
-        #video-container {
-            display: none;
-            width: 100vw;
-            height: 100vh;
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            background: #000;
-        }
+    .error {
+      color: #b00020;
+      background: #fff0f0;
+      border-radius: 12px;
+      padding: 14px;
+      margin-top: 16px;
+      font-size: 14px;
+      line-height: 1.6;
+      display: none;
+    }
 
-        .pulse {
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% {
-                opacity: 1;
-            }
-
-            50% {
-                opacity: .45;
-            }
-        }
-
-    </style>
-
+    .teacher {
+      margin-top: 24px;
+      color: #777;
+      font-size: 13px;
+    }
+  </style>
 </head>
 
+<body>
 
-<body class="min-h-screen">
+  <div class="container">
 
+    <a href="mypage.html" class="back">← マイページに戻る</a>
 
-<!-- =========================
-     JITSI
-========================= -->
+    <div class="card">
 
-<div id="video-container"></div>
+      <div class="icon">🎹</div>
 
+      <h1 id="title">先生を待っています</h1>
 
-<!-- =========================
-     WAITING UI
-========================= -->
+      <div class="message" id="message">
+        先生が準備できるまで、ここで待っていてね。
+      </div>
 
-<div id="main-ui" class="min-h-screen flex flex-col">
+      <div class="status" id="status">
+        <strong>⏳ 準備中</strong>
+        先生が練習を始めると、ここから参加できます。
+      </div>
 
+      <button id="joinButton" disabled>
+        先生を待っています…
+      </button>
 
-    <!-- HEADER -->
+      <div class="error" id="error"></div>
 
-    <header
-        class="flex items-center justify-between p-4 bg-stone-900 border-b border-stone-800"
-    >
+      <div class="teacher" id="teacherInfo">
+        先生との練習ルーム
+      </div>
 
-        <div class="flex items-center gap-2">
+    </div>
 
-            <span class="text-xl">
-                🎹
-            </span>
+  </div>
 
-            <span class="serif text-sm sm:text-base text-amber-100">
-                PIANO BANSOU
-            </span>
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-        </div>
+  <script>
 
+    const SUPABASE_URL =
+      "https://flzguqgdgltwzuxudolg.supabase.co";
 
-        <a
-            href="mypage.html"
-            class="text-xs text-stone-400 border border-stone-700 px-3 py-2 rounded-lg"
-        >
-            戻る
-        </a>
+    const SUPABASE_ANON_KEY =
+      "ここには現在使っているSupabaseの公開キーを入れてください";
 
-    </header>
-
-
-
-    <!-- MAIN -->
-
-    <main
-        class="flex-1 flex items-center justify-center p-5"
-    >
-
-        <div
-            class="w-full max-w-md bg-stone-800 rounded-3xl border border-stone-700 shadow-2xl overflow-hidden"
-        >
-
-
-            <!-- TOP -->
-
-            <div class="h-1 bg-amber-500"></div>
-
-
-            <div class="p-7 sm:p-9 text-center">
-
-
-                <!-- ICON -->
-
-                <div
-                    class="w-20 h-20 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center text-4xl"
-                >
-                    🎹
-                </div>
-
-
-                <!-- TITLE -->
-
-                <h1
-                    class="mt-7 text-2xl font-bold text-white"
-                >
-                    先生を待っています
-                </h1>
-
-
-                <p
-                    class="mt-4 text-sm text-stone-400 leading-7"
-                >
-                    もうすぐ練習の時間です。<br>
-                    先生が入室したら、ここから一緒に練習を始めます。
-                </p>
-
-
-                <!-- STATUS -->
-
-                <div
-                    class="mt-7 p-5 rounded-2xl bg-stone-900 border border-stone-700"
-                >
-
-                    <div class="flex items-center justify-center gap-3">
-
-                        <span
-                            id="status-dot"
-                            class="w-3 h-3 rounded-full bg-amber-400 pulse"
-                        ></span>
-
-                        <span
-                            id="status-text"
-                            class="text-sm font-bold text-amber-300"
-                        >
-                            先生が入室するのを待っています
-                        </span>
-
-                    </div>
-
-
-                    <p
-                        id="status-detail"
-                        class="mt-3 text-xs text-stone-500 leading-6"
-                    >
-                        この画面を開いたままお待ちください。
-                    </p>
-
-                </div>
-
-
-
-                <!-- ENTER BUTTON -->
-
-                <div id="join-area" class="hidden mt-6">
-
-                    <button
-                        id="join-button"
-                        onclick="joinRoom()"
-                        class="w-full bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold py-4 rounded-2xl shadow-lg transition active:scale-95"
-                    >
-                        🎹 先生と一緒に練習する
-                    </button>
-
-                </div>
-
-
-
-                <!-- NOTICE -->
-
-                <div
-                    class="mt-7 text-left bg-stone-900/70 rounded-2xl p-4 border border-stone-700"
-                >
-
-                    <p
-                        class="text-xs font-bold text-stone-300"
-                    >
-                        💡 準備しておこう
-                    </p>
-
-                    <ul
-                        class="mt-3 space-y-2 text-xs text-stone-500 leading-6"
-                    >
-
-                        <li>
-                            ・ピアノの前で待っていよう
-                        </li>
-
-                        <li>
-                            ・楽譜を用意しておこう
-                        </li>
-
-                        <li>
-                            ・マイクとカメラを使えるようにしておこう
-                        </li>
-
-                    </ul>
-
-                </div>
-
-            </div>
-
-        </div>
-
-    </main>
-
-
-
-    <!-- FOOTER -->
-
-    <footer
-        class="text-center py-4 text-xs text-stone-600 border-t border-stone-900"
-    >
-
-        &copy; PIANO BANSOU
-
-    </footer>
-
-</div>
-
-
-
-<script>
-
-
-/* =========================================
-   SUPABASE
-========================================= */
-
-const SUPABASE_URL =
-    'https://flzguqgdgltwzuxudolg.supabase.co';
-
-
-const SUPABASE_KEY =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZsemd1cWdkZ2x0d3p1eHVkb2xnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODgyNzE3NzcsImV4cCI6MjEwMzg0Nzc3N30.uD9R7Q6QbtWJ0bkZ-KHZF2D06vJV4g_mMn74IISjqQY';
-
-
-const supabaseClient =
-    window.supabase.createClient(
+    const supabaseClient =
+      supabase.createClient(
         SUPABASE_URL,
-        SUPABASE_KEY
-    );
+        SUPABASE_ANON_KEY
+      );
+
+    let currentUser = null;
+    let currentSession = null;
+
+    const title = document.getElementById("title");
+    const message = document.getElementById("message");
+    const status = document.getElementById("status");
+    const joinButton = document.getElementById("joinButton");
+    const errorBox = document.getElementById("error");
+    const teacherInfo = document.getElementById("teacherInfo");
 
 
-
-/* =========================================
-   STATE
-========================================= */
-
-let currentUser = null;
-
-let currentSession = null;
-
-let jitsiApi = null;
+    function showError(text) {
+      errorBox.textContent = text;
+      errorBox.style.display = "block";
+    }
 
 
-/*
- * セッション確認間隔
- *
- * 本番ではRealtimeに変更します。
- * 今は10秒ごとにSupabaseを確認します。
- */
-
-const CHECK_INTERVAL = 10000;
+    function clearError() {
+      errorBox.textContent = "";
+      errorBox.style.display = "none";
+    }
 
 
+    async function loadSession() {
 
-/* =========================================
-   USER
-========================================= */
+      clearError();
 
-async function loadUser() {
-
-    const {
+      const {
         data: {
-            session
-        }
-    } = await supabaseClient.auth.getSession();
+          user
+        },
+        error: authError
+      } = await supabaseClient.auth.getUser();
 
 
-    if (!session) {
+      if (authError || !user) {
 
-        window.location.href = 'login.html';
-
-        return false;
-
-    }
-
-
-    currentUser = session.user;
-
-    return true;
-
-}
-
-
-
-/* =========================================
-   CHECK TUTOR
-========================================= */
-
-async function checkTutorPresence() {
-
-    if (!currentUser) {
+        window.location.href = "login.html";
         return;
-    }
+      }
 
 
-    /*
-     * tutorがactiveにした練習セッションを取得。
-     *
-     * practice_sessionsテーブルは
-     * 次の工程で作成します。
-     */
+      currentUser = user;
 
-    const {
-        data,
-        error
-    } = await supabaseClient
-        .from('practice_sessions')
-        .select('*')
-        .eq('child_id', currentUser.id)
-        .eq('status', 'active')
-        .order('created_at', {
-            ascending: false
+
+      /*
+       * ① 生徒に割り当てられた先生を取得
+       */
+
+      const {
+        data: assignment,
+        error: assignmentError
+      } = await supabaseClient
+        .from("tutor_child_assignments")
+        .select("tutor_id")
+        .eq("child_id", currentUser.id)
+        .maybeSingle();
+
+
+      if (assignmentError) {
+
+        console.error(assignmentError);
+
+        showError(
+          "先生との紐付けを確認できませんでした。"
+        );
+
+        return;
+      }
+
+
+      if (!assignment) {
+
+        title.textContent = "先生の準備中です";
+
+        message.textContent =
+          "まだ担当の先生が設定されていません。";
+
+        status.innerHTML = `
+          <strong>🎹 もう少し待ってね</strong>
+          先生との準備ができると、ここから練習できます。
+        `;
+
+        joinButton.disabled = true;
+        joinButton.textContent = "先生を待っています…";
+
+        return;
+      }
+
+
+      const tutorId = assignment.tutor_id;
+
+
+      /*
+       * ② その先生が、この生徒のために
+       *    開始しているセッションを取得
+       */
+
+      const {
+        data: session,
+        error: sessionError
+      } = await supabaseClient
+        .from("practice_sessions")
+        .select("*")
+        .eq("child_id", currentUser.id)
+        .eq("tutor_id", tutorId)
+        .eq("status", "active")
+        .order("created_at", {
+          ascending: false
         })
         .limit(1)
         .maybeSingle();
 
 
-    if (error) {
+      if (sessionError) {
 
-        console.log(
-            'セッション確認中:',
-            error.message
+        console.error(sessionError);
+
+        showError(
+          "練習ルームの状態を確認できませんでした。"
         );
 
-        /*
-         * テーブルがまだない段階でも、
-         * 子どもをJitsiへ入れない。
-         */
+        return;
+      }
 
-        setWaiting();
+
+      /*
+       * ③ まだ先生が開始していない
+       */
+
+      if (!session) {
+
+        currentSession = null;
+
+        title.textContent = "先生を待っています";
+
+        message.textContent =
+          "先生が準備できるまで、ここで待っていてね。";
+
+        status.innerHTML = `
+          <strong>⏳ 準備中</strong>
+          先生が練習を始めると、ここから参加できます。
+        `;
+
+        joinButton.disabled = true;
+        joinButton.textContent = "先生を待っています…";
 
         return;
+      }
 
-    }
 
+      /*
+       * ④ 先生が開始した
+       */
 
-    if (!data) {
+      currentSession = session;
 
-        setWaiting();
+      title.textContent = "先生と練習できます！";
 
-        return;
+      message.textContent =
+        "先生が待っているよ。準備ができたら入ろう！";
+
+      status.innerHTML = `
+        <strong>🎹 準備OK！</strong>
+        先生と一緒に練習を始めよう。
+      `;
+
+      joinButton.disabled = false;
+      joinButton.textContent = "🎹 一緒に練習する";
+
+      teacherInfo.textContent =
+        "担当の先生との1対1練習";
 
     }
 
 
     /*
-     * tutorがactiveにした
+     * Dailyへ参加
      */
 
-    currentSession = data;
-
-    setTutorReady();
-
-}
-
-
-
-/* =========================================
-   WAITING
-========================================= */
-
-function setWaiting() {
-
-    const dot =
-        document.getElementById('status-dot');
-
-    const text =
-        document.getElementById('status-text');
-
-    const detail =
-        document.getElementById('status-detail');
-
-    const joinArea =
-        document.getElementById('join-area');
-
-
-    dot.className =
-        'w-3 h-3 rounded-full bg-amber-400 pulse';
-
-
-    text.innerText =
-        '先生が入室するのを待っています';
-
-
-    text.className =
-        'text-sm font-bold text-amber-300';
-
-
-    detail.innerText =
-        '先生が入室したら、ここから一緒に練習を始めます。';
-
-
-    joinArea.classList.add('hidden');
-
-}
-
-
-
-/* =========================================
-   TUTOR READY
-========================================= */
-
-function setTutorReady() {
-
-    const dot =
-        document.getElementById('status-dot');
-
-    const text =
-        document.getElementById('status-text');
-
-    const detail =
-        document.getElementById('status-detail');
-
-    const joinArea =
-        document.getElementById('join-area');
-
-
-    dot.className =
-        'w-3 h-3 rounded-full bg-green-400';
-
-
-    text.innerText =
-        '先生が待っています！';
-
-
-    text.className =
-        'text-sm font-bold text-green-300';
-
-
-    detail.innerText =
-        '準備ができたら、ボタンを押して一緒に練習を始めよう。';
-
-
-    joinArea.classList.remove('hidden');
-
-}
-
-
-
-/* =========================================
-   JOIN ROOM
-========================================= */
-
-function joinRoom() {
-
-    if (!currentSession) {
-
-        alert(
-            '先生がまだ入室していません。少し待ってみてください。'
-        );
-
-        return;
-
-    }
-
-
-    const roomName =
-        currentSession.room_name;
-
-
-    if (!roomName) {
-
-        alert(
-            '練習ルームの準備ができていません。'
-        );
-
-        return;
-
-    }
-
-
-    const container =
-        document.getElementById('video-container');
-
-
-    container.style.display =
-        'block';
-
-
-    document.getElementById('main-ui').style.display =
-        'none';
-
-
-    const displayName =
-        currentUser.email
-            ? currentUser.email.split('@')[0]
-            : 'お子さま';
-
-
-    const options = {
-
-        roomName: roomName,
-
-        width: '100%',
-
-        height: '100%',
-
-        parentNode: container,
-
-        userInfo: {
-
-            displayName: displayName
-
-        },
-
-        configOverwrite: {
-
-            disableDeepLinking: true,
-
-            startWithAudioMuted: false,
-
-            startWithVideoMuted: false
-
-        },
-
-        interfaceConfigOverwrite: {
-
-            SHOW_JITSI_WATERMARK: false,
-
-            MOBILE_APP_PROMO: false
-
+    joinButton.addEventListener(
+      "click",
+      async function() {
+
+        if (!currentSession) {
+          return;
         }
 
-    };
+        if (!currentSession.room_name) {
 
+          showError(
+            "練習ルームがまだ準備されていません。"
+          );
 
-    jitsiApi =
-        new JitsiMeetExternalAPI(
-            'meet.jit.si',
-            options
-        );
-
-
-    jitsiApi.addEventListener(
-        'videoConferenceLeft',
-        () => {
-
-            container.style.display =
-                'none';
-
-            container.innerHTML =
-                '';
-
-            window.location.href =
-                'mypage.html';
-
+          return;
         }
+
+
+        /*
+         * 現段階ではDaily Prebuiltを
+         * ルームURLで開く。
+         *
+         * 後ほど生徒専用の短期トークン方式に変更する。
+         */
+
+        const roomUrl =
+          "https://piano-bansou.daily.co/" +
+          currentSession.room_name;
+
+
+        window.location.href = roomUrl;
+
+      }
     );
-
-}
-
-
-
-/* =========================================
-   START
-========================================= */
-
-async function start() {
-
-    const loggedIn =
-        await loadUser();
-
-
-    if (!loggedIn) {
-        return;
-    }
-
-
-    await checkTutorPresence();
 
 
     /*
-     * 10秒ごとに先生の入室状態を確認
+     * 10秒ごとに先生の開始状態を確認
      */
 
     setInterval(
-        checkTutorPresence,
-        CHECK_INTERVAL
+      loadSession,
+      10000
     );
 
-}
 
+    /*
+     * 初回読み込み
+     */
 
-start();
+    loadSession();
 
-</script>
-
+  </script>
 
 </body>
-
 </html>
